@@ -31,7 +31,7 @@ void CTOR maze_init(void)
 		maze_loge("SDL_CreateWindow"), exit(EXIT_FAILURE);
 
 	ctx->rend = SDL_CreateRenderer(ctx->win, -1,
-		SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+		SDL_RENDERER_ACCELERATED);
 	if (ctx->rend == NULL)
 		maze_loge("SDL_Createrend"), exit(EXIT_FAILURE);
 }

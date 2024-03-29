@@ -4,6 +4,8 @@
 #include "common.h"
 #include "maze_map.h"
 
+#include <pthread.h>
+
 #include "DG_dynarr.h"
 
 #ifndef NO_CDTORS
@@ -24,7 +26,6 @@ DG_DYNARR_TYPEDEF(maze_resource_t, maze_resource_stack_t)
 
 typedef struct maze_game_context_s
 {
-	double fps;
 	SDL_Renderer *rend;
 	SDL_Window *win;
 	TTF_Font *font;
@@ -33,6 +34,8 @@ typedef struct maze_game_context_s
 	player_t *pl;
 	map_t *map;
 	maze_resource_stack_t *resource_stack;
+	double dtmin;
+	double dt;
 
 	unsigned char raycaster;
 	int hoff, voff;

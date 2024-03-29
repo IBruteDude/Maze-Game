@@ -6,7 +6,7 @@ SRCS=src/*.c
 INCL=-Iinclude
 LINK=-Llib
 
-LIBS=-lmingw32 -lSDL2main -lSDL2 -lSDL2_image.dll -lSDL2_ttf.dll include/cjson/cJSON.c
+LIBS=-lpthread -lmingw32 -lSDL2main -lSDL2 -lSDL2_image.dll -lSDL2_ttf.dll include/cjson/cJSON.c
 DLLS=lib/*.dll
 
 BUILD=build

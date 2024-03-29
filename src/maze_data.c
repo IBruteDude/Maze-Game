@@ -37,10 +37,13 @@ bool maze_data_load(const char *savefile)
 		return (false);
 
 	player_pos = json_obj(game_data, "player");
-	ctx->fps = json_num(game_data, "fps");
+	ctx->dtmin = 1 / json_num(game_data, "fpsmax");
+	ctx->dt = ctx->dtmin;
 	ctx->pl->x = json_num(player_pos, "x"),
 	ctx->pl->y = json_num(player_pos, "y"),
 	ctx->pl->view = json_num(player_pos, "view");
+	ctx->pl->speed = json_num(player_pos, "speed");
+	ctx->pl->xvel = ctx->pl->yvel = 0;
 
 	map_load(ctx->map, json_str(game_data, "map"));
 

@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
+
 
 typedef unsigned char byte;
 typedef unsigned short ushort;
@@ -132,6 +134,8 @@ typedef struct player_s
 		dvec2 pos;
 	};
 	double view;
+	double speed;
+	double xvel, yvel;
 } player_t;
 
 #endif

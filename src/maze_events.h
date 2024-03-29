@@ -4,7 +4,6 @@
 #include "common.h"
 
 
-int maze_event_handler(void);
-
+void *maze_event_handler(void *data);
 
 #endif
