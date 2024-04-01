@@ -14,14 +14,14 @@ void render_text(const char *message, int x, int y) {
 	static const SDL_Color White = { 255, 255, 255, 255 };
 
 	SDL_Surface* surfaceMessage =
-	    TTF_RenderText_Solid(ctx->font, message, White); 
+		TTF_RenderText_Solid(ctx->font, message, White);
 
 	SDL_Texture* msg_tex = SDL_CreateTextureFromSurface(ctx->rend, surfaceMessage);
 
 	SDL_Rect textbox = {.x = x, .y = y, .h = ctx->fz / 2,
 						.w = ctx->fz / 2 * strlen(message) / 3};
 
-	
+
 	SDL_RenderCopy(ctx->rend, msg_tex, NULL, &textbox);
 	SDL_FreeSurface(surfaceMessage);
 	SDL_DestroyTexture(msg_tex);
@@ -224,76 +224,123 @@ void tutorial_renderer(map_t *map, player_t *pl)
 	SDL_SetRenderDrawColor(ctx->rend, 0, 0, 0, 255);
 }
 
-
-double distance_vh2(map_t *map, double x, double y, double theta, bool *north_or_south)
+void distance_vh2(map_t *map, double x, double y, double theta,
+				  double *dist, double *hdist, double *vdist, bool *north_or_south)
 {
-	double SDL_UNUSED ix = (int)(x), iy = (int)(y), w = map->w, h = map->h,
+	double ix = (int)(x), iy = (int)(y), w = map->w, h = map->h,
 		   dx = cos(theta), dy = sin(theta),
-		   vdx = dx / dy, hdy = dy / dx,
 		   hdx = (dx >= 0) ? 1 : -1, vdy = (dy >= 0) ? 1 : -1,
-		   hd = (dx >= 0) ? 1 + (int)(x) - x : ((int)(x) - x),
-		   vd = (dy >= 0) ? 1 + (int)(y) - y : ((int)(y) - y),
-		   thd, tvd, hx, hy, vx, vy, tan_th = tan(theta), itan_th = 1 / tan_th;
+		   hd = (dx >= 0) ? 1 + (floor(x) - x) : (floor(x) - x),
+		   vd = (dy >= 0) ? 1 + (floor(y) - y) : (floor(y) - y),
+		   thd, tvd, tan_th = tan(theta), itan_th = 1 / tan_th;
 
-	assert(x >= 0 && y >= 0);
 	if (map_get(map, ix, iy) == WALL)
-		return (0);
-
-	ix = x + hd;
-	iy = y + (hd * tan_th);
+	{
+		*vdist = 0, *hdist = 0;
+		return;
+	}
+	ix = x + hd, iy = y + (hd * tan_th);
 
 	while (0 <= ix && ix < w && 0 <= iy && iy < h && map_get(map, ix, iy) == FLOOR)
 	{
 		hd += hdx;
-		ix = x + hd;
-		iy = y + (hd * tan_th);
-
-		if (0 > iy || iy > h - 1 || map_get(map, ix, iy) != FLOOR) {
-			if (dx < 0 &&
-				0 <= ix && ix < w &&
-				0 <= (iy - hdx * tan_th) && (iy - hdx * tan_th) < h &&
-				map_get(map, ix, iy - hdx * tan_th) != FLOOR)
+		ix = x + hd, iy = y + (hd * tan_th);
+		if (0 > iy || iy > h - 1 || map_get(map, ix, iy) != FLOOR)
+		{
+			if (dx < 0 && 0 <= (iy - hdx * tan_th) && (iy - hdx * tan_th) < h &&
+				0 <= ix && ix < w && map_get(map, ix, iy - hdx * tan_th) != FLOOR)
 				hd -= hdx;
 			break;
 		}
 	}
-	
+
 	iy = y + vd;
 	ix = x + (vd * itan_th);
-	while (0 <= iy && iy < h)
+	while (0 <= ix && ix < w && 0 <= iy && iy < h && map_get(map, ix, iy) == FLOOR)
 	{
 		vd += vdy;
-		iy = y + vd;
-		ix = x + (vd * itan_th);
-		if (0 > ix || ix > w - 1 || 0 > iy || iy > h - 1 || map_get(map, ix, iy) != FLOOR) {
-			if (dy < 0 &&
-				0 <= (ix - vdy * itan_th) && (ix - vdy * itan_th) < w &&
+		iy = y + vd, ix = x + (vd * itan_th);
+		if (0 > ix || ix > w - 1 || 0 > iy || iy > h - 1 || map_get(map, ix, iy) != FLOOR)
+		{
+			if (dy < 0 && 0 <= (ix - vdy * itan_th) && (ix - vdy * itan_th) < w &&
 				0 <= iy && iy < h && map_get(map, ix - vdy * itan_th, iy) != FLOOR)
 				vd -= vdy;
 			break;
 		}
 	}
-	
-
-	thd = hd / dx;
-	tvd = vd / dy;
+	*hdist = hd, *vdist = vd;
+	thd = hd / dx, tvd = vd / dy;
 	if (fabs(tvd) <= fabs(thd))
+		*north_or_south = true, *dist = (tvd);
+	else
+		*north_or_south = false, *dist = (thd);
+}
+
+void draw_texture_line(double xs, double ys, double xe, double ye, double t_param, SDL_Texture *tex)
+{
+	maze_game_context_t *ctx = game_ctx();
+	int w, h;
+
+	SDL_QueryTexture(tex, NULL, NULL, &w, &h);
+	if (xs == xe)
 	{
-		*north_or_south = true;
-		return (tvd);
+		SDL_Rect srcrect = { .x = t_param * w, .y = 0, .w = 1, .h = h };
+		SDL_Rect dstrect = { .x = xs, .y = ys, .w = 1, .h = (ye - ys) };
+
+		SDL_RenderCopy(ctx->rend, tex, &srcrect, &dstrect);
 	}
-	*north_or_south = false;
-	return (thd);
+	else
+	{
+		SDL_Rect srcrect = { .x = t_param * w, .y = 0, .w = 1, .h = h };
+		SDL_FRect dstrect = { .x = xs, .y = ys, .w = 1, .h = sqrt((xe - xs) * (xe - xs) + (ye - ys) * (ye - ys))};
+		double angle = atan2(ye - ys, xe - xs);
+		SDL_FPoint center = { .x = xs, .y = ys };
+
+		SDL_RenderCopyExF(ctx->rend, tex, &srcrect, &dstrect, angle, &center, SDL_FLIP_NONE);
+	}
+}
+
+void raycaster_textured(map_t *map, player_t *pl)
+{
+	maze_game_context_t *ctx = game_ctx();
+	double d, finalx, finaly, hd, vd, h, px_angle_dt = FOV_W / WIN_W, tan_fh2 = tan(FOV_H / 2) * 2;
+	bool north_or_south = false;
+	char textbuf[100];
+
+
+	for (int i = -(WIN_W / 2); i < WIN_W / 2; i++) {
+		double tan_th = tan(pl->view + i * px_angle_dt), itan_th = 1 / tan_th;
+
+		distance_vh2(map, pl->x, pl->y, pl->view + i * px_angle_dt,
+						&d, &hd, &vd, &north_or_south);
+		h = d * tan_fh2;
+
+		if (north_or_south)
+			finalx = vd * itan_th + pl->x,
+			draw_texture_line(i + WIN_W/2, WIN_H * (0.5 - WALL_H / (2 * h)),
+							  i + WIN_W/2, WIN_H * (0.5 + WALL_H / (2 * h)),
+							  (((finalx) - floor(finalx))), ctx->texs->p[0]);
+		else
+			finaly = hd * tan_th + pl->y,
+			draw_texture_line(i + WIN_H/2 + 80, WIN_H * (0.5 - WALL_H / (2 * h)),
+							  i + WIN_H/2 + 80, WIN_H * (0.5 + WALL_H / (2 * h)),
+							  (((finaly) - floor(finaly))), ctx->texs->p[1]);
+	}
+	snprintf(textbuf, 100, "fps: %.2f", 1 / ctx->dt);
+	render_text(textbuf, 0, 0);
+
+	SDL_SetRenderDrawColor(ctx->rend, 0, 0, 0, 255);
 }
 
 void raycaster(map_t *map, player_t *pl)
 {
 	maze_game_context_t *ctx = game_ctx();
-	double d, h, px_angle_dt = FOV_W / WIN_W, tan_fh2 = tan(FOV_H / 2) * 2;
+	double d, hd, vd, h, px_angle_dt = FOV_W / WIN_W, tan_fh2 = tan(FOV_H / 2) * 2;
 	bool north_or_south = false;
 
 	for (int i = -(WIN_W / 2); i < WIN_W / 2; i++) {
-		d = distance_vh2(map, pl->x, pl->y, pl->view + i * px_angle_dt, &north_or_south);
+		distance_vh2(map, pl->x, pl->y, pl->view + i * px_angle_dt,
+						&d, &hd, &vd, &north_or_south);
 		h = d * tan_fh2;
 
 		if (north_or_south)
@@ -303,88 +350,30 @@ void raycaster(map_t *map, player_t *pl)
 		SDL_RenderDrawLine(ctx->rend,
 			i + WIN_W/2, WIN_H * (0.5 - WALL_H / (2 * h)),
 			i + WIN_W/2, WIN_H * (0.5 + WALL_H / (2 * h)));
-		// DEBUGF(WIN_H * (0.5 - WALL_H / (2 * h)));
 	}
 	char textbuf[100];
 	snprintf(textbuf, 100, "fps: %.2f", 1 / ctx->dt);
 	render_text(textbuf, 0, 0);
-	
+
 	SDL_SetRenderDrawColor(ctx->rend, 0, 0, 0, 255);
 }
-
 
 
 void raycaster_2D_preview(map_t *map, player_t *pl)
 {
 	maze_game_context_t *ctx = game_ctx();
-	double SDL_UNUSED d, lineh,
+	double SDL_UNUSED d, hd, vd, lineh,
 		px_angle_dt = FOV_W / WIN_W, tan_fh2 = tan(FOV_H / 2) * 2;
-	bool north_or_south;
 	char stat_display_buf[100];
+	bool north_or_south;
 
 	CLAMP_ANGLE(pl->view);
-	for (int i = -(WIN_W / 2); i < WIN_W / 2; i+=8) {
-		double x = pl->x, y = pl->y, theta = pl->view + i * px_angle_dt;
-		double ix = (int)(x), iy = (int)(y), w = map->w, h = map->h,
-			   dx = cos(theta), dy = sin(theta),
-			   hdx = (dx >= 0) ? 1 : -1, vdy = (dy >= 0) ? 1 : -1,
-			   hd = (dx >= 0) ? 1 + floor(x) - x : (floor(x) - x),
-			   vd = (dy >= 0) ? 1 + floor(y) - y : (floor(y) - y),
-			   thd, tvd, tan_th = tan(theta), itan_th = 1 / tan_th;
+	for (int ray_n = -(WIN_W / 2); ray_n < WIN_W / 2; ray_n+=8) {
+		double  x = pl->x, y = pl->y, theta = pl->view + ray_n * px_angle_dt,
+				w = map->w, h = map->h, tan_th = tan(theta), itan_th = 1 / tan_th;
 
-		assert(x >= 0 && y >= 0);
-		if (map_get(map, ix, iy) == WALL)
-			d = (0);
-		else
-{
-	ix = x + hd;
-	iy = y + (hd * tan_th);
-
-	while (0 <= ix && ix < w && 0 <= iy && iy < h && map_get(map, ix, iy) == FLOOR)
-	{
-		hd += hdx;
-		ix = x + hd;
-		iy = y + (hd * tan_th);
-
-		if (0 > iy || iy > h - 1 || map_get(map, ix, iy) != FLOOR) {
-			if (dx < 0 &&
-				0 <= ix && ix < w &&
-				0 <= (iy - hdx * tan_th) && (iy - hdx * tan_th) < h &&
-				map_get(map, ix, iy - hdx * tan_th) != FLOOR)
-				hd -= hdx;
-			break;
-		}
-	}
-	
-	iy = y + vd;
-	ix = x + (vd * itan_th);
-	while (0 <= iy && iy < h)
-	{
-		vd += vdy;
-		iy = y + vd;
-		ix = x + (vd * itan_th);
-		if (0 > ix || ix > w - 1 || 0 > iy || iy > h - 1 || map_get(map, ix, iy) != FLOOR) {
-			if (dy < 0 &&
-				0 <= (ix - vdy * itan_th) && (ix - vdy * itan_th) < w &&
-				0 <= iy && iy < h && map_get(map, ix - vdy * itan_th, iy) != FLOOR)
-				vd -= vdy;
-			break;
-		}
-	}
-	
-
-	thd = hd / dx;
-	tvd = vd / dy;
-	if (fabs(tvd) <= fabs(thd))
-	{
-		north_or_south = true;
-		d = (tvd);
-	} else {
-		north_or_south = false;
-		d = (thd);
-	}
-}
-
+		distance_vh2(map, pl->x, pl->y, pl->view + ray_n * px_angle_dt,
+					&d, &hd, &vd, &north_or_south);
 #define THICKNESS 1
 		for (int i = 0; i < map->h; i++)
 			for (int j = 0; j < map->w; j++) {
@@ -398,17 +387,32 @@ void raycaster_2D_preview(map_t *map, player_t *pl)
 					SDL_SetRenderDrawColor(ctx->rend, 255, 255, 255, 255);
 				else
 					SDL_SetRenderDrawColor(ctx->rend, 100, 100, 100, 255);
-				
 				SDL_RenderDrawRect(ctx->rend, &r);
 			}
+		if (ray_n == 0)
+		{
+			SDL_Rect r = {
+				.w = WIN_H/w - 2*THICKNESS,
+				.h = WIN_H/h - 2*THICKNESS
+			};
+			if (north_or_south)
+				r.x = WIN_H*(vd * itan_th + x)/w + THICKNESS,
+				r.y = WIN_H*(vd + y)/h + THICKNESS,
+				SDL_SetRenderDrawColor(ctx->rend, 30, 255, 50, 255);
+			else
+				r.x = WIN_H*(hd + x)/w + THICKNESS,
+				r.y = WIN_H*(hd * tan_th + y)/h + THICKNESS,
+				SDL_SetRenderDrawColor(ctx->rend, 30, 50, 255, 255);
+			SDL_RenderDrawRect(ctx->rend, &r);
+		}
 
 		SDL_Rect p = { .x = pl->x / w * WIN_H - 4, .y = pl->y / h * WIN_H - 4, .w = 8, .h =  8};
-		
+
 		SDL_SetRenderDrawColor(ctx->rend, 180, 80, 20, 255);
 		SDL_RenderFillRect(ctx->rend, &p);
 
 		if (ctx->hoff % 3 == 1 || (north_or_south && ctx->hoff % 3 == 0)) {
-			if (i != 0)
+			if (ray_n != 0)
 				SDL_SetRenderDrawColor(ctx->rend, 30, 50, 255, 255),
 				SDL_RenderDrawLine(ctx->rend, pl->x / w * WIN_H, pl->y / h * WIN_H,
 				((vd * itan_th) + x) / w * WIN_H, (vd + y) / h * WIN_H);
@@ -421,7 +425,7 @@ void raycaster_2D_preview(map_t *map, player_t *pl)
 				SDL_RenderDrawLine(ctx->rend, pl->x / w * WIN_H + 1, pl->y / h * WIN_H - 1,
 				((vd * itan_th) + x) / w * WIN_H + 1, (vd + y) / h * WIN_H - 1);
 		} else {
-			if (i != 0)
+			if (ray_n != 0)
 				SDL_SetRenderDrawColor(ctx->rend, 30, 255, 50, 255),
 				SDL_RenderDrawLine(ctx->rend, pl->x / w * WIN_H, pl->y / h * WIN_H,
 				(hd + x) / w * WIN_H, ((hd * tan_th) + y) / h * WIN_H);
@@ -457,5 +461,6 @@ void raycaster_2D_preview(map_t *map, player_t *pl)
 
 	SDL_SetRenderDrawColor(ctx->rend, 0, 0, 0, 255);
 }
+
 
 #endif

@@ -4,13 +4,14 @@ maze_game_context_t *game_ctx(void) {
 	static map_t map;
 	static player_t pl;
 	static maze_resource_stack_t resource_stack;
+	static texture_pack_t texture_pack;
 	static maze_game_context_t global_game_context = {
 		.pl = &pl,
 		.map = &map,
-		.resource_stack = &resource_stack
+		.resource_stack = &resource_stack,
+		.texs = &texture_pack,
 	};
 
-	da_init(resource_stack);
 	return &global_game_context;
 }
 
@@ -24,7 +25,7 @@ void CTOR maze_init(void)
 	if (TTF_Init() != 0)
 		maze_loge("TTF_Init"), exit(EXIT_FAILURE);
 
-	ctx->win = SDL_CreateWindow("Hello World SDL",
+	ctx->win = SDL_CreateWindow("Maze Game",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		WIN_W, WIN_H, SDL_WINDOW_SHOWN);
 	if (ctx->win == NULL)
@@ -33,7 +34,10 @@ void CTOR maze_init(void)
 	ctx->rend = SDL_CreateRenderer(ctx->win, -1,
 		SDL_RENDERER_ACCELERATED);
 	if (ctx->rend == NULL)
-		maze_loge("SDL_Createrend"), exit(EXIT_FAILURE);
+		maze_loge("SDL_CreateRenderer"), exit(EXIT_FAILURE);
+
+	da_init(*ctx->resource_stack);
+	da_init(*ctx->texs);
 }
 
 
@@ -47,6 +51,9 @@ void DTOR maze_cleanup(void)
 		if (r.resource != NULL)
 			r.deallocator(r.resource);
 	}
+
+	da_free(*ctx->resource_stack);
+	da_free(*ctx->texs);
 
 	if (ctx->win != NULL)
 		SDL_DestroyWindow(ctx->win);

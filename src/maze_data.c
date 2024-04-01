@@ -2,9 +2,17 @@
 
 #include "cjson/cJSON.h"
 
-#define json_obj(obj, field) cJSON_GetObjectItem(obj, field)
-#define json_num(obj, field) cJSON_GetNumberValue(json_obj(obj, field))
-#define json_str(obj, field) cJSON_GetStringValue(json_obj(obj, field))
+#define OBJ(obj, field) cJSON_GetObjectItem(obj, field)
+
+#define NUM(obj) cJSON_GetNumberValue(obj)
+#define STR(obj) cJSON_GetStringValue(obj)
+#define ARR_GET(obj, idx)	cJSON_GetArrayItem(obj, idx)
+#define ARR_SIZE(obj)	cJSON_GetArraySize(obj)
+
+#define json_num(obj, field) NUM(OBJ(obj, field))
+#define json_str(obj, field) STR(OBJ(obj, field))
+#define json_arr_get(obj, field, idx)	ARR_GET(OBJ(obj, field), idx)
+#define json_arr_size(obj, field)	ARR_SIZE(OBJ(obj, field))
 
 char *loadfile(const char *filename) {
 	FILE *f = fopen(filename, "r");
@@ -36,7 +44,7 @@ bool maze_data_load(const char *savefile)
 	if (!game_data)
 		return (false);
 
-	player_pos = json_obj(game_data, "player");
+	player_pos = OBJ(game_data, "player");
 	ctx->dtmin = 1 / json_num(game_data, "fpsmax");
 	ctx->dt = ctx->dtmin;
 	ctx->pl->x = json_num(player_pos, "x"),
@@ -47,17 +55,24 @@ bool maze_data_load(const char *savefile)
 
 	map_load(ctx->map, json_str(game_data, "map"));
 
-
 	ctx->fz = json_num(game_data, "font_size");
 
-	DEBUGI(ctx->fz);
 	sprintf(pathbuf, "%s/%s", getenv("PWD"), json_str(game_data, "font"));
 	ctx->font = TTF_OpenFont(pathbuf, ctx->fz);
-	puts(pathbuf);
 
 	if (ctx->font == NULL)
 		maze_loge("TTF_OpenFont"), exit(EXIT_FAILURE);
 
+	int tex_num = json_arr_size(game_data, "textures");
+
+	for (int i = 0; i < tex_num; i++)
+	{
+		sprintf(pathbuf, "%s/%s", getenv("PWD"), STR(json_arr_get(game_data, "textures", i)));
+		SDL_Surface *sur = IMG_Load(pathbuf);
+
+		da_push(*ctx->texs, SDL_CreateTextureFromSurface(ctx->rend, sur));
+		SDL_FreeSurface(sur);
+	}
 	cJSON_Delete(game_data);
 	return (!!ctx->map);
 }
@@ -66,5 +81,8 @@ void maze_data_free()
 {
 	maze_game_context_t *ctx = game_ctx();
 
+	for (size_t i = 0; i < da_count(*ctx->texs); i++)
+		SDL_DestroyTexture(da_get(*ctx->texs, i));
+	da_free(*ctx->texs);
 	map_free(ctx->map);
 }

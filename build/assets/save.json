@@ -8,5 +8,6 @@
 	},
 	"fpsmax": 60,
 	"font": "assets/Sans.ttf",
-	"font_size": 40
+	"font_size": 40,
+	"textures": ["assets/walls1.jpg", "assets/walls2.jpg"]
 }

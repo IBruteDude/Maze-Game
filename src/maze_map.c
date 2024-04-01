@@ -4,7 +4,7 @@ bool map_load(map_t *map, const char *mapfile)
 {
 	// map_t *map = (map_t *)malloc(sizeof(*map));
 	FILE *f;
-	char pathbuf[1024] = "";
+	char pathbuf[PATH_MAX] = "";
 	unsigned char buf[1024];
 	int len = 0, n = 0, i = 0;
 

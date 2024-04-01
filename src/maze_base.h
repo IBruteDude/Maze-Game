@@ -23,11 +23,13 @@ typedef struct maze_resource_s
 } maze_resource_t;
 
 DG_DYNARR_TYPEDEF(maze_resource_t, maze_resource_stack_t)
+DG_DYNARR_TYPEDEF(SDL_Texture *, texture_pack_t)
 
 typedef struct maze_game_context_s
 {
 	SDL_Renderer *rend;
 	SDL_Window *win;
+	texture_pack_t *texs; 
 	TTF_Font *font;
 	int fz;
 

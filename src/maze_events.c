@@ -4,19 +4,15 @@
 
 void handle_key(maze_game_context_t *ctx, SDL_Event *event)
 {
-	double rotation;
+	// double rotation =  0.0;
 	player_t *pl = ctx->pl;
 
-	rotation = 0.0;
 	switch (event->key.keysym.sym)
 	{
-		case SDLK_a: case SDLK_LEFT: rotation += PI/2;
-		case SDLK_s: case SDLK_DOWN: rotation += PI/2;
-		case SDLK_d: case SDLK_RIGHT: rotation += PI/2;
-		case SDLK_w: case SDLK_UP:
-			pl->xvel = (event->type == SDL_KEYDOWN) ? ctx->dt * pl->speed * cos(pl->view + rotation) : 0;
-			pl->yvel = (event->type == SDL_KEYDOWN) ? ctx->dt * pl->speed * sin(pl->view + rotation) : 0;
-			break;
+		case SDLK_a: case SDLK_LEFT:	pl->xvel = (event->type == SDL_KEYDOWN) ? -1 : 0;	break;
+		case SDLK_s: case SDLK_DOWN:	pl->yvel = (event->type == SDL_KEYDOWN) ? -1 : 0;	break;
+		case SDLK_d: case SDLK_RIGHT:	pl->xvel = (event->type == SDL_KEYDOWN) ?  1 : 0;	break;
+		case SDLK_w: case SDLK_UP:		pl->yvel = (event->type == SDL_KEYDOWN) ?  1 : 0;	break;
 		case SDLK_ESCAPE:
 			SDL_SetRelativeMouseMode(0);
 			break;

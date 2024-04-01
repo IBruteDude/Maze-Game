@@ -28,12 +28,15 @@ while (0) \
 	#define ABS(x) ((((x) < 0) ? -(x) : (x)))
 #endif
 
-#ifndef DBG
-	#define DEBUGI(x) printf("L%d: " #x " = %ld\n", __LINE__, (long)x)
-	#define DEBUG2I(x, y) printf("L%d: " #x " = %ld, " #y " = %ld\n", __LINE__, (long)x, (long)y)
+#ifdef DEBUG
+	#define ASSERT(condition, x) \
+		(assert(condition), x)
 
-	#define DEBUGF(x) printf("L%d: " #x " = %f\n", __LINE__, (double)x)
-	#define DEBUG2F(x, y) printf("L%d: " #x " = %f, " #y " = %f\n", __LINE__, (double)x, (double)y)
+	#define DEBUGI(x)		(printf("L%d: " #x " = %ld\n", __LINE__, (long)x), fflush(stdout), x)
+	#define DEBUG2I(x, y)	(printf("L%d: " #x " = %ld, " #y " = %ld\n", __LINE__, (long)x, (long)y), fflush(stdout), x), y
+
+	#define DEBUGF(x)		(printf("L%d: " #x " = %f\n", __LINE__, (double)x), fflush(stdout), x)
+	#define DEBUG2F(x, y)	(printf("L%d: " #x " = %f, " #y " = %f\n", __LINE__, (double)x, (double)y), fflush(stdout), x), y
 
 	#define DEBUGMAP(map, ix, iy, s) \
 	do { \
@@ -42,12 +45,13 @@ while (0) \
 				printf((i == floor(ix) && j == floor(iy)) ? s "%d" s : " %d ", map[i * w + j]); \
 			putchar('\n'); \
 		} \
+		fflush(stdout); \
 	} while(0)
 #else
-	#define DEBUGI(x)
-	#define DEBUG2I(x, y)
-	#define DEBUGF(x)
-	#define DEBUG2F(x, y)
+	#define DEBUGI(x)		x
+	#define DEBUG2I(x, y)	x, y
+	#define DEBUGF(x)		x
+	#define DEBUG2F(x, y)	x, y
 	#define DEBUGMAP(map, ix, iy, s)
 #endif
 

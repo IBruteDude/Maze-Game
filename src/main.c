@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 	maze_game_context_t *ctx = game_ctx();
 	player_t *pl = ctx->pl;
 	struct timespec tlast = {0}, tnow = {0};
-	double delay;
+	double delay, dx, dy, dxx, dxy, dyx, dyy;
 	bool capfps = false;
 
 	ctx->raycaster = 3;
@@ -48,10 +48,10 @@ state machine
 		switch (ctx->raycaster)
 		{
 		case 0:
-			first_renderer_prototype(ctx->map, pl);
+			tutorial_renderer(ctx->map, pl);
 			break;
 		case 1:
-			tutorial_renderer(ctx->map, pl);
+			raycaster_textured(ctx->map, pl);
 			break;
 		case 2:
 			raycaster(ctx->map, pl);
@@ -75,14 +75,18 @@ state machine
 
 		SDL_RenderPresent(ctx->rend);
 
-		pl->x += pl->xvel;
-		pl->y += pl->yvel;
+		dxx = pl->xvel * cos(pl->view + PI/2);
+		dxy = pl->xvel * sin(pl->view + PI/2);
+		dyx = pl->yvel * cos(pl->view);
+		dyy = pl->yvel * sin(pl->view);
+		pl->x += dx = ctx->dt * pl->speed * (dxx + dyx);
+		pl->y += dy = ctx->dt * pl->speed * (dxy + dyy);
 		if (pl->x >= ctx->map->w - 1 || pl->x <= 0 ||
 			map_get(ctx->map, pl->x, pl->y) != FLOOR)
-			pl->x -= pl->xvel;
+			pl->x -= dx;
 		if (pl->y >= ctx->map->h - 1 || pl->y <= 0 ||
 			map_get(ctx->map, pl->x, pl->y) != FLOOR)
-			pl->y -= pl->yvel;
+			pl->y -= dy;
 	}
 	return (EXIT_SUCCESS);
 }
