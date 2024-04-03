@@ -322,8 +322,8 @@ void raycaster_textured(map_t *map, player_t *pl)
 							  (((finalx) - floor(finalx))), ctx->texs->p[0]);
 		else
 			finaly = hd * tan_th + pl->y,
-			draw_texture_line(i + WIN_H/2 + 80, WIN_H * (0.5 - WALL_H / (2 * h)),
-							  i + WIN_H/2 + 80, WIN_H * (0.5 + WALL_H / (2 * h)),
+			draw_texture_line(i + WIN_W/2, WIN_H * (0.5 - WALL_H / (2 * h)),
+							  i + WIN_W/2, WIN_H * (0.5 + WALL_H / (2 * h)),
 							  (((finaly) - floor(finaly))), ctx->texs->p[1]);
 	}
 	snprintf(textbuf, 100, "fps: %.2f", 1 / ctx->dt);
@@ -383,7 +383,7 @@ void raycaster_2D_preview(map_t *map, player_t *pl)
 					.w = WIN_H/w - 2*THICKNESS,
 					.h = WIN_H/h - 2*THICKNESS,
 				};
-				if (map_get(map, j, i) == WALL)
+				if (map_get(map, j, i) != FLOOR)
 					SDL_SetRenderDrawColor(ctx->rend, 255, 255, 255, 255);
 				else
 					SDL_SetRenderDrawColor(ctx->rend, 100, 100, 100, 255);

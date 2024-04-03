@@ -2,43 +2,30 @@
 
 bool map_load(map_t *map, const char *mapfile)
 {
-	// map_t *map = (map_t *)malloc(sizeof(*map));
 	FILE *f;
-	char pathbuf[PATH_MAX] = "";
-	unsigned char buf[1024];
+	char pathbuf[PATH_MAX] = "", buf[1024];
 	int len = 0, n = 0, i = 0;
 
-	da_init(map->data);
-	sprintf(pathbuf, "%s/%s", getenv("PWD"), mapfile);
-	f = fopen(pathbuf, "r");
+	sprintf(pathbuf, "%s/%s", getenv("PWD"), mapfile), f = fopen(pathbuf, "r");
 	if (!f)
-	{
-		fprintf(stderr, "error opening mapfile: %s\n", mapfile);
-		da_free(map->data);
-		fclose(f);
 		return (false);
-	}
-
+	da_init(map->data);
 	while ((n = fread(buf, 1, 1024, f)))
 		da_addn(map->data, buf, n);
 	len = da_count(map->data);
-
 	while (i < len && da_get(map->data, i) != '\n')
 		i++;
-	i++;
-	map->w = i;
+	map->w = ++i;
 	if (len % map->w != 0)
 		goto cleanup;
 	while (i < len)
 	{
 		while (i < len && da_get(map->data, i) != '\n')
 			i++;
-		i++;
-		if (i % map->w != 0)
+		if (++i % map->w != 0)
 		{
-			fprintf(stderr,
-				"error loading map from file: %s\n"
-				"inconsistent map dimensions\n", mapfile);
+			fprintf(stderr, "error loading map from file: %s\n"
+							"inconsistent map dimensions\n", mapfile);
 			goto cleanup;
 		}
 	}
@@ -46,11 +33,10 @@ bool map_load(map_t *map, const char *mapfile)
 	fclose(f);
 	return (true);
 cleanup:
-	// if (map)
-	// 	free(map);
 	if (f)
 		fclose(f);
-	da_free(map->data);
+	if (map)
+		da_free(map->data), free(map);
 	return (false);
 }
 

@@ -4,11 +4,13 @@
 
 #define OBJ(obj, field) cJSON_GetObjectItem(obj, field)
 
+#define BOOL(obj) cJSON_IsTrue(obj)
 #define NUM(obj) cJSON_GetNumberValue(obj)
 #define STR(obj) cJSON_GetStringValue(obj)
 #define ARR_GET(obj, idx)	cJSON_GetArrayItem(obj, idx)
 #define ARR_SIZE(obj)	cJSON_GetArraySize(obj)
 
+#define json_bool(obj, field) BOOL(OBJ(obj, field))
 #define json_num(obj, field) NUM(OBJ(obj, field))
 #define json_str(obj, field) STR(OBJ(obj, field))
 #define json_arr_get(obj, field, idx)	ARR_GET(OBJ(obj, field), idx)
@@ -34,23 +36,20 @@ char *loadfile(const char *filename) {
 bool maze_data_load(const char *savefile)
 {
 	maze_game_context_t *ctx = game_ctx();
-	cJSON *game_data, *player_pos;
+	cJSON *game_data, *player;
 	char *buf, pathbuf[PATH_MAX] = "";
 
 	sprintf(pathbuf, "%s/%s", getenv("PWD"), savefile);
-	buf = loadfile(pathbuf);
-	game_data = cJSON_Parse(buf);
-	free(buf);
+	buf = loadfile(pathbuf), game_data = cJSON_Parse(buf), free(buf);
 	if (!game_data)
 		return (false);
 
-	player_pos = OBJ(game_data, "player");
-	ctx->dtmin = 1 / json_num(game_data, "fpsmax");
-	ctx->dt = ctx->dtmin;
-	ctx->pl->x = json_num(player_pos, "x"),
-	ctx->pl->y = json_num(player_pos, "y"),
-	ctx->pl->view = json_num(player_pos, "view");
-	ctx->pl->speed = json_num(player_pos, "speed");
+	player = OBJ(game_data, "player");
+	ctx->dtmin = 1 / json_num(game_data, "fpsmax"), ctx->dt = ctx->dtmin;
+	ctx->capfps = json_bool(game_data, "capfps");
+	ctx->pl->x = json_num(player, "x"), ctx->pl->y = json_num(player, "y"),
+	ctx->pl->view = json_num(player, "view");
+	ctx->pl->speed = json_num(player, "speed");
 	ctx->pl->xvel = ctx->pl->yvel = 0;
 
 	map_load(ctx->map, json_str(game_data, "map"));

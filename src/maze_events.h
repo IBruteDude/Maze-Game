@@ -6,4 +6,8 @@
 
 void *maze_event_handler(void *data);
 
+void calculate_time_tick(void);
+
+void calculate_player_tick(void);
+
 #endif

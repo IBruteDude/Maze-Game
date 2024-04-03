@@ -33,13 +33,16 @@ typedef struct maze_game_context_s
 	TTF_Font *font;
 	int fz;
 
+	int state;
 	player_t *pl;
 	map_t *map;
 	maze_resource_stack_t *resource_stack;
+
+	struct timespec *tlast;
 	double dtmin;
 	double dt;
+	bool capfps;
 
-	unsigned char raycaster;
 	int hoff, voff;
 } maze_game_context_t;
 

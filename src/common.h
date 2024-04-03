@@ -15,12 +15,12 @@ typedef unsigned long ulong;
 
 #define PI 3.1415926535897932
 #define CLAMP_ANGLE(theta) \
-do \
+do {\
 	if (theta < -PI) \
 		theta = (-(fmod(-theta + PI, 2 * PI) - PI)); \
-	else if (PI < theta)  \
+	else if (theta > PI)  \
 		theta = fmod(theta + PI, 2 * PI) - PI; \
-while (0) \
+} while (0) \
 
 #if !defined(MIN) && !defined(MAX) && !defined(ABS)
 	#define MIN(x, y) ((((x) < (y)) ? (x) : (y)))
@@ -32,21 +32,27 @@ while (0) \
 	#define ASSERT(condition, x) \
 		(assert(condition), x)
 
-	#define DEBUGI(x)		(printf("L%d: " #x " = %ld\n", __LINE__, (long)x), fflush(stdout), x)
-	#define DEBUG2I(x, y)	(printf("L%d: " #x " = %ld, " #y " = %ld\n", __LINE__, (long)x, (long)y), fflush(stdout), x), y
+	#define DEBUGI(x) \
+	(printf("L%d: " #x " = %ld\n", __LINE__, (long)x), fflush(stdout), x)
+	#define DEBUG2I(x, y) \
+	(printf("L%d: " #x " = %ld, " #y " = %ld\n", __LINE__, (long)x, (long)y), fflush(stdout), x), y
 
-	#define DEBUGF(x)		(printf("L%d: " #x " = %f\n", __LINE__, (double)x), fflush(stdout), x)
-	#define DEBUG2F(x, y)	(printf("L%d: " #x " = %f, " #y " = %f\n", __LINE__, (double)x, (double)y), fflush(stdout), x), y
+	#define DEBUGF(x) \
+	(printf("L%d: " #x " = %f\n", __LINE__, (double)x), fflush(stdout), x)
+	#define DEBUG2F(x, y) \
+	(printf("L%d: " #x " = %f, " #y " = %f\n", __LINE__, (double)x, (double)y), fflush(stdout), x), y
 
 	#define DEBUGMAP(map, ix, iy, s) \
 	do { \
-		for (int i = 0; i < h; i++) { \
+		for (int i = 0; i < h; i++) \
+		{ \
 			for (int j = 0; j < w; j++) \
-				printf((i == floor(ix) && j == floor(iy)) ? s "%d" s : " %d ", map[i * w + j]); \
+				printf((i == floor(ix) && j == floor(iy)) ? s "%d" s : " %d ",\
+					map[i * w + j]); \
 			putchar('\n'); \
 		} \
 		fflush(stdout); \
-	} while(0)
+	} while (0)
 #else
 	#define DEBUGI(x)		x
 	#define DEBUG2I(x, y)	x, y
@@ -119,14 +125,17 @@ VEC_T(unsigned int, uvec)
 VEC_T(float, vec)
 VEC_T(double, dvec)
 
-typedef enum direction_e
-{
-	UP		= 0,
-	DOWN	= 1,
-	RIGHT	= 2,
-	LEFT	= 3,
-} direction_t;
-
+/**
+ * struct player_s - a struct for storing player data
+ *
+ * @x: x coordinate of the player on the map
+ * @y: y coordinate of the player on the map
+ * @pos: a 2d vector storing x, y coordinates together
+ * @view: the view angle of the player
+ * @speed: the speed of movement of the player
+ * @xvel: the direction of horizontal movement
+ * @yvel: the direction of vertical movement
+ */
 typedef struct player_s
 {
 	union

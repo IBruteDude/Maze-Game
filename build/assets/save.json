@@ -1,5 +1,5 @@
 {
-	"map": "assets/tutorial.map",
+	"map": "assets/default.map",
 	"player": {
 		"x": 18,
 		"y": 10,
@@ -9,5 +9,6 @@
 	"fpsmax": 60,
 	"font": "assets/Sans.ttf",
 	"font_size": 40,
-	"textures": ["assets/walls1.jpg", "assets/walls2.jpg"]
+	"textures": ["assets/walls1.jpg", "assets/walls2.jpg"],
+	"capfps": false
 }

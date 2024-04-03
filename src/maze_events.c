@@ -17,10 +17,10 @@ void handle_key(maze_game_context_t *ctx, SDL_Event *event)
 			SDL_SetRelativeMouseMode(0);
 			break;
 		case SDLK_LSHIFT:
-			ctx->raycaster = (ctx->raycaster + 3) & 3;
+			ctx->state = (ctx->state + 3) & 3;
 			break;
 		case SDLK_RSHIFT:
-			ctx->raycaster = (ctx->raycaster + 1) & 3;
+			ctx->state = (ctx->state + 1) & 3;
 			break;
 		case SDLK_v:
 			ctx->voff++;
@@ -43,7 +43,7 @@ void handle_mouse(maze_game_context_t *ctx, SDL_Event *event)
 	case SDL_MOUSEBUTTONDOWN:
 	{
 		SDL_SetRelativeMouseMode(1);
-		ctx->raycaster = (ctx->raycaster + event->button.button) & 3;
+		ctx->state = (ctx->state + event->button.button) & 3;
 		break;
 	}
 	case SDL_MOUSEMOTION:
@@ -75,3 +75,42 @@ void *maze_event_handler(void *data)
 	return (NULL);
 }
 
+void calculate_time_tick(void)
+{
+	maze_game_context_t *ctx = game_ctx();
+	struct timespec tnow;
+
+	timespec_get(&tnow, TIME_UTC);
+
+	ctx->dt = (tnow.tv_sec - ctx->tlast->tv_sec) +
+			1e-9 * (tnow.tv_nsec - ctx->tlast->tv_nsec);
+	*ctx->tlast = tnow;
+	if (ctx->capfps)
+	{
+		double delay = ctx->dtmin - ctx->dt;
+		if (delay > 0)
+			SDL_Delay(1000 * delay);
+	}
+}
+
+void calculate_player_tick(void)
+{
+	maze_game_context_t *ctx = game_ctx();
+	player_t *pl = ctx->pl;
+	double newx, newy, dx, dy, dxx, dxy, dyx, dyy;
+
+	dxx = pl->xvel * cos(pl->view + PI/2);
+	dxy = pl->xvel * sin(pl->view + PI/2);
+	dyx = pl->yvel * cos(pl->view);
+	dyy = pl->yvel * sin(pl->view);
+	newx = pl->x + (dx = ctx->dt * pl->speed * (dxx + dyx));
+	newy = pl->y + (dy = ctx->dt * pl->speed * (dxy + dyy));
+
+
+	if (0 < newx && newx < ctx->map->w &&
+		map_get(ctx->map, newx, pl->y) == FLOOR)
+		pl->x = newx;
+	if (0 < newy && newy < ctx->map->h &&
+		map_get(ctx->map, pl->x, newy) == FLOOR)
+		pl->y = newy;
+}

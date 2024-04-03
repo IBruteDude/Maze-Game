@@ -5,11 +5,16 @@ maze_game_context_t *game_ctx(void) {
 	static player_t pl;
 	static maze_resource_stack_t resource_stack;
 	static texture_pack_t texture_pack;
+	static struct timespec last_frame_time;
 	static maze_game_context_t global_game_context = {
 		.pl = &pl,
 		.map = &map,
 		.resource_stack = &resource_stack,
 		.texs = &texture_pack,
+		.tlast = &last_frame_time,
+		.state = 2,
+		.hoff = 0,
+		.voff = 0,
 	};
 
 	return &global_game_context;
