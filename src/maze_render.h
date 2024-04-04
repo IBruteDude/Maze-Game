@@ -3,6 +3,7 @@
 
 #include "maze_base.h"
 #include "raycaster.h"
+#include "olc.h"
 
 #define FOV_W (60 * PI / 180)
 #define FOV_H (FOV_W * WIN_H / WIN_W)
@@ -311,7 +312,7 @@ void raycaster_textured(map_t *map, player_t *pl)
 	for (int i = -(WIN_W / 2); i < WIN_W / 2; i++) {
 		double tan_th = tan(pl->view + i * px_angle_dt), itan_th = 1 / tan_th;
 
-		distance_vh2(map, pl->x, pl->y, pl->view + i * px_angle_dt,
+		olc_distance(map, pl->x, pl->y, pl->view + i * px_angle_dt,
 						&d, &hd, &vd, &north_or_south);
 		h = d * tan_fh2;
 
@@ -339,7 +340,7 @@ void raycaster(map_t *map, player_t *pl)
 	bool north_or_south = false;
 
 	for (int i = -(WIN_W / 2); i < WIN_W / 2; i++) {
-		distance_vh2(map, pl->x, pl->y, pl->view + i * px_angle_dt,
+		olc_distance(map, pl->x, pl->y, pl->view + i * px_angle_dt,
 						&d, &hd, &vd, &north_or_south);
 		h = d * tan_fh2;
 
@@ -372,7 +373,7 @@ void raycaster_2D_preview(map_t *map, player_t *pl)
 		double  x = pl->x, y = pl->y, theta = pl->view + ray_n * px_angle_dt,
 				w = map->w, h = map->h, tan_th = tan(theta), itan_th = 1 / tan_th;
 
-		distance_vh2(map, pl->x, pl->y, pl->view + ray_n * px_angle_dt,
+		olc_distance(map, pl->x, pl->y, pl->view + ray_n * px_angle_dt,
 					&d, &hd, &vd, &north_or_south);
 #define THICKNESS 1
 		for (int i = 0; i < map->h; i++)
@@ -448,13 +449,17 @@ void raycaster_2D_preview(map_t *map, player_t *pl)
 
 	sprintf(stat_display_buf, "view = %.3f", pl->view * 180/PI);
 	render_text(stat_display_buf, WIN_H + 4, ctx->fz/2 * __COUNTER__);
-	sprintf(stat_display_buf, "hdx = %.3f", hdx);
+	sprintf(stat_display_buf, "x = %.3f", pl->x);
 	render_text(stat_display_buf, WIN_H + 4, ctx->fz/2 * __COUNTER__);
-	sprintf(stat_display_buf, "hdy = %.3f", hdy);
+	sprintf(stat_display_buf, "y = %.3f", pl->y);
 	render_text(stat_display_buf, WIN_H + 4, ctx->fz/2 * __COUNTER__);
-	sprintf(stat_display_buf, "vdx = %.3f", vdx);
+	sprintf(stat_display_buf, "[x] = %.3f", pl->x - (int)pl->x);
 	render_text(stat_display_buf, WIN_H + 4, ctx->fz/2 * __COUNTER__);
-	sprintf(stat_display_buf, "vdy = %.3f", vdy);
+	sprintf(stat_display_buf, "[y] = %.3f", pl->y - (int)pl->y);
+	render_text(stat_display_buf, WIN_H + 4, ctx->fz/2 * __COUNTER__);
+	sprintf(stat_display_buf, "hd = %.3f", hd);
+	render_text(stat_display_buf, WIN_H + 4, ctx->fz/2 * __COUNTER__);
+	sprintf(stat_display_buf, "vd = %.3f", vd);
 	render_text(stat_display_buf, WIN_H + 4, ctx->fz/2 * __COUNTER__);
 	sprintf(stat_display_buf, "mode = %d", game_ctx()->hoff % 13);
 	render_text(stat_display_buf, WIN_H + 4, ctx->fz/2 * __COUNTER__);
