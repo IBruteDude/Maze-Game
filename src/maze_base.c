@@ -12,9 +12,10 @@ maze_game_context_t *game_ctx(void) {
 		.resource_stack = &resource_stack,
 		.texs = &texture_pack,
 		.tlast = &last_frame_time,
-		.state = 2,
+		.state = MAZE_3D,
 		.hoff = 0,
 		.voff = 0,
+		.textured = true,
 	};
 
 	return &global_game_context;

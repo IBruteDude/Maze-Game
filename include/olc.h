@@ -51,7 +51,11 @@
 	~~~~~~
 	David Barr, aka javidx9, ©OneLoneCoder 2019, 2020, 2021
 */
+#ifndef OLC_H
+#define OLC_H
 #include "maze_base.h"
 
 void olc_distance(map_t *map, double x, double y, double theta,
 		double *dist, double *hdist, double *vdist, bool *north_or_south);
+
+#endif

@@ -1,38 +1,5 @@
 #include "maze_data.h"
 
-#include "cjson/cJSON.h"
-
-#define OBJ(obj, field) cJSON_GetObjectItem(obj, field)
-
-#define BOOL(obj) cJSON_IsTrue(obj)
-#define NUM(obj) cJSON_GetNumberValue(obj)
-#define STR(obj) cJSON_GetStringValue(obj)
-#define ARR_GET(obj, idx)	cJSON_GetArrayItem(obj, idx)
-#define ARR_SIZE(obj)	cJSON_GetArraySize(obj)
-
-#define json_bool(obj, field) BOOL(OBJ(obj, field))
-#define json_num(obj, field) NUM(OBJ(obj, field))
-#define json_str(obj, field) STR(OBJ(obj, field))
-#define json_arr_get(obj, field, idx)	ARR_GET(OBJ(obj, field), idx)
-#define json_arr_size(obj, field)	ARR_SIZE(OBJ(obj, field))
-
-char *loadfile(const char *filename) {
-	FILE *f = fopen(filename, "r");
-	char *buf;
-	long fsize;
-
-	fseek(f, 0, SEEK_END);
-	fsize = ftell(f);
-	fseek(f, 0, SEEK_SET);
-
-	buf = malloc(fsize + 1);
-	fread(buf, 1, fsize, f);
-	buf[fsize] = '\0';
-
-	fclose(f);
-	return buf;
-}
-
 bool maze_data_load(const char *savefile)
 {
 	maze_game_context_t *ctx = game_ctx();
@@ -44,7 +11,7 @@ bool maze_data_load(const char *savefile)
 	if (!game_data)
 		return (false);
 
-	player = OBJ(game_data, "player");
+	player = JOBJ(game_data, "player");
 	ctx->dtmin = 1 / json_num(game_data, "fpsmax"), ctx->dt = ctx->dtmin;
 	ctx->capfps = json_bool(game_data, "capfps");
 	ctx->pl->x = json_num(player, "x"), ctx->pl->y = json_num(player, "y"),
@@ -66,7 +33,7 @@ bool maze_data_load(const char *savefile)
 
 	for (int i = 0; i < tex_num; i++)
 	{
-		sprintf(pathbuf, "%s/%s", getenv("PWD"), STR(json_arr_get(game_data, "textures", i)));
+		sprintf(pathbuf, "%s/%s", getenv("PWD"), JSTR(json_arr_get(game_data, "textures", i)));
 		SDL_Surface *sur = IMG_Load(pathbuf);
 
 		da_push(*ctx->texs, SDL_CreateTextureFromSurface(ctx->rend, sur));

@@ -74,6 +74,23 @@ do {\
 
 DA_TYPEDEF(byte, byte_vec)
 
+#include "cjson/cJSON.h"
+
+#define JOBJ(obj, field) cJSON_GetObjectItem(obj, field)
+
+#define JBOOL(obj) cJSON_IsTrue(obj)
+#define JNUM(obj) cJSON_GetNumberValue(obj)
+#define JSTR(obj) cJSON_GetStringValue(obj)
+#define JARR_GET(obj, idx)	cJSON_GetArrayItem(obj, idx)
+#define JARR_SIZE(obj)	cJSON_GetArraySize(obj)
+
+#define json_bool(obj, field) JBOOL(JOBJ(obj, field))
+#define json_num(obj, field) JNUM(JOBJ(obj, field))
+#define json_str(obj, field) JSTR(JOBJ(obj, field))
+#define json_arr_get(obj, field, idx)	JARR_GET(JOBJ(obj, field), idx)
+#define json_arr_size(obj, field)	JARR_SIZE(JOBJ(obj, field))
+
+
 #define maze_loge(err_src) fprintf(stderr, \
 	#err_src " Error: %s\n", SDL_GetError())
 
@@ -150,5 +167,7 @@ typedef struct player_s
 	double speed;
 	double xvel, yvel;
 } player_t;
+
+char *loadfile(const char *filename);
 
 #endif

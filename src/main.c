@@ -1,9 +1,5 @@
-#include "maze_base.h"
-#include "maze_map.h"
-
 #include "maze_render.h"
 #include "maze_data.h"
-
 #include "maze_events.h"
 
 int main(int argc, char *argv[])
@@ -25,16 +21,10 @@ int main(int argc, char *argv[])
 		SDL_RenderClear(ctx->rend);
 		switch (ctx->state)
 		{
-		case 0:
-			tutorial_renderer(ctx->map, pl);
+		case MAZE_3D:
+			raycaster_renderer(ctx->map, pl);
 			break;
-		case 1:
-			raycaster_textured(ctx->map, pl);
-			break;
-		case 2:
-			raycaster(ctx->map, pl);
-			break;
-		case 3:
+		case MAZE_MINIMAP:
 			raycaster_2D_preview(ctx->map, pl);
 			break;
 		}

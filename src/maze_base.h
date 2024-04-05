@@ -25,6 +25,12 @@ typedef struct maze_resource_s
 DG_DYNARR_TYPEDEF(maze_resource_t, maze_resource_stack_t)
 DG_DYNARR_TYPEDEF(SDL_Texture *, texture_pack_t)
 
+typedef enum maze_game_state_e
+{
+	MAZE_MINIMAP,
+	MAZE_3D,
+} maze_game_state_t;
+
 typedef struct maze_game_context_s
 {
 	SDL_Renderer *rend;
@@ -33,7 +39,7 @@ typedef struct maze_game_context_s
 	TTF_Font *font;
 	int fz;
 
-	int state;
+	maze_game_state_t state;
 	player_t *pl;
 	map_t *map;
 	maze_resource_stack_t *resource_stack;
@@ -42,6 +48,7 @@ typedef struct maze_game_context_s
 	double dtmin;
 	double dt;
 	bool capfps;
+	bool textured;
 
 	int hoff, voff;
 } maze_game_context_t;

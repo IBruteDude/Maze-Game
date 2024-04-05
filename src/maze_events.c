@@ -21,6 +21,12 @@ void handle_key(maze_game_context_t *ctx, SDL_Event *event)
 			else if (event->type == SDL_KEYUP && (pl->yvel == 2))
 				pl->yvel = 1;
 			break;
+		case SDLK_m:
+			if (event->type == SDL_KEYDOWN)
+				ctx->state = (ctx->state == MAZE_MINIMAP) ? MAZE_3D : MAZE_MINIMAP;
+		case SDLK_t:
+			if (event->type == SDL_KEYDOWN)
+				ctx->textured = !ctx->textured;
 		case SDLK_v:
 			ctx->voff++;
 			break;
@@ -42,7 +48,6 @@ void handle_mouse(maze_game_context_t *ctx, SDL_Event *event)
 	case SDL_MOUSEBUTTONDOWN:
 	{
 		SDL_SetRelativeMouseMode(1);
-		ctx->state = (ctx->state + event->button.button) & 3;
 		break;
 	}
 	case SDL_MOUSEMOTION:
