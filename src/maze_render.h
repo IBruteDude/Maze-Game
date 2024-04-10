@@ -34,12 +34,88 @@ void draw_texture_line(double xs, double ys, double xe, double ye, double t_para
 	}
 }
 
+
+#define ALL4(xs, pred) (pred(xs[0]) && pred(xs[1]) && pred(xs[2]) && pred(xs[3]))
+#define NONE4(xs, pred) (!pred(xs[0]) && !pred(xs[1]) && !pred(xs[2]) && !pred(xs[3]))
+
+
+bool calculate_vh_angles(double px, double py, double pview,
+	double x, double y, double wx[4], double wy[4])
+{
+	double	min_ha = -FOV_H/2, max_ha = FOV_H/2,
+			min_wa = -FOV_W/2, max_wa = FOV_W/2,
+			dy[4] = { x - px, x + 1 - px, x + 1 - px, x - px },
+			dx[4] = { y - py, y - py, y + 1 - py, y + 1 - py },
+			dz = WALL_H/2, theta[4], phi[4], hypo;
+
+
+	for (int i = 0; i < 4; i++) {
+		theta[i] = (atan2(dx[i], dy[i]) + FOV_W/2) - pview;
+		hypo = sqrt(dx[i] * dx[i] + dy[i] * dy[i] + dz * dz);
+		phi[i] = asin(dz / hypo) + FOV_H/2;
+	}
+
+#define PRED1(x) (x < 0 || x > FOV_W)
+#define PRED2(x) (x < 0 || x > FOV_H)
+
+	// if (ALL4(theta, PRED1) || ALL4(phi, PRED2))
+	// 	return false;
+
+	for (int i = 0; i < 4; i++) {
+		wx[i] = theta[i] / FOV_W * WIN_W;
+		wy[i] = phi[i] / FOV_H * WIN_H;
+	}
+	return true;
+#undef PRED1
+#undef PRED2
+}
+
+void render_floor(map_t *map, player_t *pl)
+{
+	double	w = map->w, h = map->h, x = pl->x, y = pl->y, view = pl->view;
+	maze_game_context_t *ctx = game_ctx();
+
+	int i = ctx->hoff, j = ctx->voff;
+	for (int i = 0; i < w; i++)
+		for (int j = 0; j < h; j++)
+			if (map_get(map, i, j) == FLOOR)
+			{
+				double wx[4], wy[4];
+
+				if (calculate_vh_angles(x, y, pl->view, i, j, wx, wy)) {
+					double side_projs[4] = {
+						wx[1] - wx[0], wy[2] - wy[1],
+						wx[2] - wx[3], wy[3] - wy[0]
+					};
+					double tmod = fabs(side_projs[0]);
+					
+					tmod = MAX(tmod, fabs(side_projs[1]));
+					tmod = MAX(tmod, fabs(side_projs[2]));
+					tmod = MAX(tmod, fabs(side_projs[3]));
+
+					SDL_SetRenderDrawColor(ctx->rend, (i * 50) & 255, (i * 80) & 255, (i * 110) & 255, 255);
+					for (int k = 0; k < tmod; k++) {
+						SDL_RenderDrawLineF(ctx->rend,
+							wx[0] + (k / tmod) * (side_projs[0]),
+							wy[0] + (k / tmod) * (wy[1] - wy[0]),
+							wx[3] + (k / tmod) * (side_projs[2]),
+							wy[3] + (k / tmod) * (wy[2] - wy[3])
+						);
+					}
+				}
+
+			}
+}
+
+
 void raycaster_renderer(map_t *map, player_t *pl)
 {
 	maze_game_context_t *ctx = game_ctx();
 	double d, tex_lerp_param, hd, vd, h, px_angle_dt = FOV_W / WIN_W,
 		tan_th, itan_th, tan_fh2 = tan(FOV_H / 2) * 2;
 	bool north_or_south = false;
+
+	render_floor(map, pl);
 
 	for (int i = -(WIN_W / 2); i < WIN_W / 2; i++) {
 		olc_distance(map, pl->x, pl->y, pl->view + i * px_angle_dt,
