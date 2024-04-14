@@ -62,6 +62,10 @@ void olc_distance(map_t *map, double x, double y, double theta,
 
 		// Test tile at new test point
 		bTileFound = !(0 <= vMapCheck.x && vMapCheck.x < map->w && 0 <= vMapCheck.y && vMapCheck.y < map->h && map_get(map, vMapCheck.x, vMapCheck.y) == FLOOR);
+		/**/
+		if (!bTileFound)
+			game_ctx()->pl_viewed[vMapCheck.x][vMapCheck.y] = 1;
+		/**/
 	}
 
 	// Calculate intersection location

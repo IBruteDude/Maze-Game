@@ -67,8 +67,8 @@ do {\
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
-#define WIN_W 640
-#define WIN_H 480
+#define WIN_W 1024
+#define WIN_H 768
 
 #include <DG_dynarr.h>
 
@@ -90,6 +90,37 @@ DA_TYPEDEF(byte, byte_vec)
 #define json_arr_get(obj, field, idx)	JARR_GET(JOBJ(obj, field), idx)
 #define json_arr_size(obj, field)	JARR_SIZE(JOBJ(obj, field))
 
+
+#define ALL2(xs, pred) ((pred((xs)[0])) && (pred((xs)[1])))
+#define ALL3(xs, pred) ((pred((xs)[0])) && (pred((xs)[1])) && (pred((xs)[2])))
+#define ALL4(xs, pred) ((pred((xs)[0])) && (pred((xs)[1])) && (pred((xs)[2])) && (pred((xs)[3])))
+
+#define NONE2(xs, pred) (!(pred((xs)[0])) && !(pred((xs)[1])))
+#define NONE3(xs, pred) (!(pred((xs)[0])) && !(pred((xs)[1])) && !(pred((xs)[2])))
+#define NONE4(xs, pred) (!(pred((xs)[0])) && !(pred((xs)[1])) && !(pred((xs)[2])) && !(pred((xs)[3])))
+
+#define SOME2(xs, pred) ((pred((xs)[0])) || (pred((xs)[1])))
+#define SOME3(xs, pred) ((pred((xs)[0])) || (pred((xs)[1])) || (pred((xs)[2])))
+#define SOME4(xs, pred) ((pred((xs)[0])) || (pred((xs)[1])) || (pred((xs)[2])) || (pred((xs)[3])))
+
+#define APPLY2(xs, func) \
+do { \
+	(func((xs)[0])); \
+	(func((xs)[1])); \
+} while (0)
+#define APPLY3(xs, func) \
+do { \
+	(func((xs)[0])); \
+	(func((xs)[1])); \
+	(func((xs)[2])); \
+} while (0)
+#define APPLY4(xs, func) \
+do { \
+	(func((xs)[0])); \
+	(func((xs)[1])); \
+	(func((xs)[2])); \
+	(func((xs)[3])); \
+} while (0)
 
 #define maze_loge(err_src) fprintf(stderr, \
 	#err_src " Error: %s\n", SDL_GetError())

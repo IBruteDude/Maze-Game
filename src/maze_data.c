@@ -15,7 +15,7 @@ bool maze_data_load(const char *savefile)
 	ctx->dtmin = 1 / json_num(game_data, "fpsmax"), ctx->dt = ctx->dtmin;
 	ctx->capfps = json_bool(game_data, "capfps");
 	ctx->pl->x = json_num(player, "x"), ctx->pl->y = json_num(player, "y"),
-	ctx->pl->view = json_num(player, "view");
+	ctx->pl->view = PI/180 * json_num(player, "view");
 	ctx->pl->speed = json_num(player, "speed");
 	ctx->pl->xvel = ctx->pl->yvel = 0;
 
@@ -40,12 +40,29 @@ bool maze_data_load(const char *savefile)
 		SDL_FreeSurface(sur);
 	}
 	cJSON_Delete(game_data);
+
+	ctx->pl_viewed = (bool **)calloc(ctx->map->w, sizeof(bool *));
+	for (int i = 0; i < ctx->map->w; i++)
+		ctx->pl_viewed[i] = (bool *)calloc(ctx->map->h, sizeof(bool));
+
+	ctx->rendered = (bool **)calloc(ctx->map->w, sizeof(bool *));
+	for (int i = 0; i < ctx->map->w; i++)
+		ctx->rendered[i] = (bool *)calloc(ctx->map->h, sizeof(bool));
+
 	return (!!ctx->map);
 }
 
 void maze_data_free()
 {
 	maze_game_context_t *ctx = game_ctx();
+
+	for (int i = 0; i < ctx->map->w; i++)
+		free(ctx->rendered[i]);
+	free(ctx->rendered);
+
+	for (int i = 0; i < ctx->map->w; i++)
+		free(ctx->pl_viewed[i]);
+	free(ctx->pl_viewed);
 
 	for (size_t i = 0; i < da_count(*ctx->texs); i++)
 		SDL_DestroyTexture(da_get(*ctx->texs, i));

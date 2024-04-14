@@ -50,6 +50,8 @@ typedef struct maze_game_context_s
 	bool capfps;
 	bool textured;
 
+	bool **pl_viewed;
+	bool **rendered;
 	int hoff, voff;
 } maze_game_context_t;
 
