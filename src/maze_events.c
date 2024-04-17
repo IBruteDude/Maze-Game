@@ -1,6 +1,7 @@
 #include "maze_events.h"
 #include "maze_base.h"
 
+#define SENSITIVITY 0.5
 
 void handle_key(maze_game_context_t *ctx, SDL_Event *event)
 {
@@ -14,6 +15,7 @@ void handle_key(maze_game_context_t *ctx, SDL_Event *event)
 		case SDLK_w: case SDLK_UP:		pl->yvel = (event->type == SDL_KEYDOWN) ?  1 : 0;	break;
 		case SDLK_ESCAPE:
 			SDL_SetRelativeMouseMode(0);
+			ctx->focused = 0;
 			break;
 		case SDLK_LSHIFT: case SDLK_RSHIFT:
 			if (event->type == SDL_KEYDOWN && (pl->yvel == 1))
@@ -48,11 +50,14 @@ void handle_mouse(maze_game_context_t *ctx, SDL_Event *event)
 	case SDL_MOUSEBUTTONDOWN:
 	{
 		SDL_SetRelativeMouseMode(1);
+		ctx->focused = 1;
 		break;
 	}
 	case SDL_MOUSEMOTION:
-		ctx->pl->view += ((double)event->motion.xrel / WIN_W) * 2 * PI;
-		CLAMP_ANGLE(ctx->pl->view);
+		if (ctx->focused) {
+			ctx->pl->view += SENSITIVITY * ((double)event->motion.xrel / WIN_W) * 2 * PI;
+			CLAMP_ANGLE(ctx->pl->view);
+		}
 		// DEBUG2F(ctx->pl->view, event.motion.xrel);
 		break;
 	}
@@ -76,6 +81,7 @@ void *maze_event_handler(void *data)
 			break;
 		}
 	}
+	handle_player_movement();
 	return (NULL);
 }
 
@@ -97,7 +103,7 @@ void calculate_time_tick(void)
 	}
 }
 
-void calculate_player_tick(void)
+void handle_player_movement(void)
 {
 	maze_game_context_t *ctx = game_ctx();
 	player_t *pl = ctx->pl;

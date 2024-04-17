@@ -9,7 +9,8 @@ int main(int argc, char *argv[])
 	player_t *pl = ctx->pl;
 
 	SDL_SetRelativeMouseMode(true);
-	if (!maze_data_load("assets/save.json")) {
+	if (!maze_data_load("assets/config.json"))
+	{
 		fprintf(stderr, "error loading game data\n");
 		exit(EXIT_FAILURE);
 	}
@@ -30,7 +31,7 @@ int main(int argc, char *argv[])
 		}
 		calculate_time_tick();
 		SDL_RenderPresent(ctx->rend);
-		calculate_player_tick();
 	}
 	return (EXIT_SUCCESS);
 }
+

@@ -16,6 +16,7 @@ maze_game_context_t *game_ctx(void) {
 		.hoff = 0,
 		.voff = 0,
 		.textured = true,
+		.focused = true,
 	};
 
 	return &global_game_context;
@@ -25,11 +26,15 @@ void CTOR maze_init(void)
 {
 	maze_game_context_t *ctx = game_ctx();
 
+	char pathbuf[PATH_MAX];
+	sprintf(pathbuf, "%s/%s", getenv("PWD"), "logs/output.log");
+	freopen(pathbuf, "w", stdout);
+	sprintf(pathbuf, "%s/%s", getenv("PWD"), "logs/error.log");
+	freopen(pathbuf, "w", stderr);
+
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 		maze_loge("SDL_Init"), exit(EXIT_FAILURE);
 
-	if (TTF_Init() != 0)
-		maze_loge("TTF_Init"), exit(EXIT_FAILURE);
 
 	ctx->win = SDL_CreateWindow("Maze Game",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -66,7 +71,6 @@ void DTOR maze_cleanup(void)
 	if (ctx->rend != NULL)
 		SDL_DestroyRenderer(ctx->rend);
 
-	TTF_Quit();
 	/** Weird bug with SDL_Quit **/
 	/* SDL_Quit(); */
 }

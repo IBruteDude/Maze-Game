@@ -1,0 +1,19 @@
+{
+	"map": "assets/maps/generated.map",
+	"player": {
+		"x": 1.5,
+		"y": 1.5,
+		"view": 45,
+		"speed": 3
+	},
+	"fpsmax": 60,
+	"font": "Sans",
+	"font_size": 150,
+	"textures": [
+		"assets/baked/images/walls1.bmp",
+		"assets/baked/images/floors.bmp",
+		"assets/baked/images/ceils.bmp",
+		"assets/baked/images/doors.bmp"
+	],
+	"capfps": false
+}

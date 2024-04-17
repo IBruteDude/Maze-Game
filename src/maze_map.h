@@ -13,6 +13,8 @@ typedef enum map_blk_e
 {
 	FLOOR = '0',
 	WALL = '1',
+	ENTERANCE = '2',
+	EXIT = '3',
 } map_blk_t;
 
 bool map_load(map_t *map, const char *mapfile);

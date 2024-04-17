@@ -1,20 +1,27 @@
 #include "maze_ui.h"
 
-void render_text(const char *message, int x, int y)
+void render_text(const char *message, int x, int y, int size)
 {
 	maze_game_context_t *ctx = game_ctx();
-	static const SDL_Color White = { 255, 255, 255, 255 };
+	static SDL_Texture *characters[128];
+	int len = strlen(message);
+	
+	if (size == -1)
+		size = ctx->fz;
+	for (int i = 0; i < len; i++)
+	{
+		SDL_Texture* char_tex = ctx->char_texs[(int)message[i]];
 
-	SDL_Surface* surfaceMessage =
-		TTF_RenderText_Solid(ctx->font, message, White);
+		int w, h;
+		SDL_QueryTexture(char_tex, NULL, NULL, &w, &h);
 
-	SDL_Texture* msg_tex = SDL_CreateTextureFromSurface(ctx->rend, surfaceMessage);
+		SDL_Rect textbox = {
+			.x = x, .y = y,
+			.h = (double)h * size / WIN_W,
+			.w = (double)w * size / WIN_W
+		};
 
-	SDL_Rect textbox = {.x = x, .y = y, .h = ctx->fz / 2,
-						.w = ctx->fz / 2 * strlen(message) / 3};
-
-
-	SDL_RenderCopy(ctx->rend, msg_tex, NULL, &textbox);
-	SDL_FreeSurface(surfaceMessage);
-	SDL_DestroyTexture(msg_tex);
+		SDL_RenderCopy(ctx->rend, char_tex, NULL, &textbox);
+		x += (double)w * size / WIN_W;		
+	}
 }

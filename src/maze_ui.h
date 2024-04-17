@@ -3,6 +3,6 @@
 
 #include "maze_base.h"
 
-void render_text(const char *message, int x, int y);
+void render_text(const char *message, int x, int y, int size);
 
 #endif

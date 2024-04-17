@@ -23,18 +23,14 @@ bool maze_data_load(const char *savefile)
 
 	ctx->fz = json_num(game_data, "font_size");
 
-	sprintf(pathbuf, "%s/%s", getenv("PWD"), json_str(game_data, "font"));
-	ctx->font = TTF_OpenFont(pathbuf, ctx->fz);
-
-	if (ctx->font == NULL)
-		maze_loge("TTF_OpenFont"), exit(EXIT_FAILURE);
+	strncpy(ctx->font, json_str(game_data, "font"), 100);
 
 	int tex_num = json_arr_size(game_data, "textures");
 
 	for (int i = 0; i < tex_num; i++)
 	{
 		sprintf(pathbuf, "%s/%s", getenv("PWD"), JSTR(json_arr_get(game_data, "textures", i)));
-		SDL_Surface *sur = IMG_Load(pathbuf);
+		SDL_Surface *sur = SDL_LoadBMP(pathbuf);
 
 		da_push(*ctx->texs, SDL_CreateTextureFromSurface(ctx->rend, sur));
 		SDL_FreeSurface(sur);
@@ -45,9 +41,18 @@ bool maze_data_load(const char *savefile)
 	for (int i = 0; i < ctx->map->w; i++)
 		ctx->pl_viewed[i] = (bool *)calloc(ctx->map->h, sizeof(bool));
 
-	ctx->rendered = (bool **)calloc(ctx->map->w, sizeof(bool *));
-	for (int i = 0; i < ctx->map->w; i++)
-		ctx->rendered[i] = (bool *)calloc(ctx->map->h, sizeof(bool));
+	for (char c = 1; c > 0; c++)
+	{
+		static const SDL_Color White = { 255, 255, 255, 255 };
+		char pathbuf[PATH_MAX];
+		sprintf(pathbuf, "%s/assets/baked/fonts/%s/%d.bmp", getenv("PWD"), ctx->font, (int)c);
+		printf(pathbuf);
+		SDL_Surface *char_sur = SDL_LoadBMP(pathbuf);
+		if (!char_sur)
+			maze_loge("SDL_LoadBMP");
+		ctx->char_texs[(int)c] = SDL_CreateTextureFromSurface(ctx->rend, char_sur);
+		SDL_FreeSurface(char_sur);
+	}
 
 	return (!!ctx->map);
 }
@@ -56,9 +61,8 @@ void maze_data_free()
 {
 	maze_game_context_t *ctx = game_ctx();
 
-	for (int i = 0; i < ctx->map->w; i++)
-		free(ctx->rendered[i]);
-	free(ctx->rendered);
+	for (char c = 1; c > 0; c++)
+		SDL_DestroyTexture(ctx->char_texs[(int)c]);
 
 	for (int i = 0; i < ctx->map->w; i++)
 		free(ctx->pl_viewed[i]);

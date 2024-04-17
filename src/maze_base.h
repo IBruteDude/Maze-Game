@@ -35,8 +35,9 @@ typedef struct maze_game_context_s
 {
 	SDL_Renderer *rend;
 	SDL_Window *win;
-	texture_pack_t *texs; 
-	TTF_Font *font;
+	texture_pack_t *texs;
+	SDL_Texture *char_texs[CHAR_MAX];
+	char font[100];
 	int fz;
 
 	maze_game_state_t state;
@@ -44,14 +45,15 @@ typedef struct maze_game_context_s
 	map_t *map;
 	maze_resource_stack_t *resource_stack;
 
+	bool **pl_viewed;
+	bool focused;
+
 	struct timespec *tlast;
 	double dtmin;
 	double dt;
 	bool capfps;
 	bool textured;
 
-	bool **pl_viewed;
-	bool **rendered;
 	int hoff, voff;
 } maze_game_context_t;
 
