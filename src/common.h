@@ -7,6 +7,15 @@
 #include <math.h>
 #include <time.h>
 
+#ifndef PATH_MAX
+	#ifdef __linux__
+		#include "linux/limits.h"
+	#elif defined(_WIN32)
+		#define PATH_MAX	MAX_PATH
+	#else
+		#define PATH_MAX	1024
+	#endif
+#endif
 
 typedef unsigned char byte;
 typedef unsigned short ushort;
@@ -66,6 +75,24 @@ do {\
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+
+#if !SDL_VERSION_ATLEAST(2, 0, 10)
+
+	#define SDL_RenderCopyF			SDL_RenderCopy
+	#define SDL_RenderCopyExF		SDL_RenderCopyEx
+	#define SDL_RenderDrawLineF		SDL_RenderDrawLine
+	#define SDL_RenderDrawLinesF	SDL_RenderDrawLines
+	#define SDL_RenderDrawPointF	SDL_RenderDrawPoint
+	#define SDL_RenderDrawPointsF	SDL_RenderDrawPoints
+	#define SDL_RenderDrawRectF		SDL_RenderDrawRect
+	#define SDL_RenderDrawRectsF	SDL_RenderDrawRects
+	#define SDL_RenderFillRectF		SDL_RenderFillRect
+	#define SDL_RenderFillRectsF	SDL_RenderFillRects
+
+	#define SDL_FRect				SDL_Rect
+	#define SDL_FPoint				SDL_Point
+
+#endif
 
 #define WIN_W 1024
 #define WIN_H 768
