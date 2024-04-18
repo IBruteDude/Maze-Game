@@ -1,6 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Werror -Wextra -pedantic -std=c11 \
-		-Wno-implicit-fallthrough -Wno-unused-variable -Wno-unused-parameter -Wno-unused-value
+CFLAGS=-Wall -Werror -Wextra -pedantic -std=c11
 DEFS=-D_USE_MATH_DEFINES
 
 SRCS=src/*.c  include/olc.c

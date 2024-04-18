@@ -11,10 +11,10 @@ typedef struct map_s
 
 typedef enum map_blk_e
 {
-	FLOOR = '0',
-	WALL = '1',
-	ENTERANCE = '2',
-	EXIT = '3',
+	MAP_FLOOR = '0',
+	MAP_WALL = '1',
+	MAP_ENTERANCE = '2',
+	MAP_EXIT = '3',
 } map_blk_t;
 
 bool map_load(map_t *map, const char *mapfile);

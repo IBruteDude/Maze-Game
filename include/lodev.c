@@ -73,7 +73,7 @@ void lodev_renderer(map_t *map, player_t *pl)
 				side = 1;
 			}
 
-			if (map_get(map, mapX, mapY) != FLOOR)
+			if (map_get(map, mapX, mapY) != MAP_FLOOR)
 				hit = 1;
 		}
 		/*

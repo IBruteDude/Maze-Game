@@ -26,9 +26,11 @@ void handle_key(maze_game_context_t *ctx, SDL_Event *event)
 		case SDLK_m:
 			if (event->type == SDL_KEYDOWN)
 				ctx->state = (ctx->state == MAZE_MINIMAP) ? MAZE_3D : MAZE_MINIMAP;
+			break;
 		case SDLK_t:
 			if (event->type == SDL_KEYDOWN)
 				ctx->textured = !ctx->textured;
+			break;
 		case SDLK_v:
 			ctx->voff++;
 			break;
@@ -118,9 +120,9 @@ void handle_player_movement(void)
 
 
 	if (0 < newx && newx < ctx->map->w &&
-		map_get(ctx->map, newx, pl->y) == FLOOR)
+		map_get(ctx->map, newx, pl->y) == MAP_FLOOR)
 		pl->x = newx;
 	if (0 < newy && newy < ctx->map->h &&
-		map_get(ctx->map, pl->x, newy) == FLOOR)
+		map_get(ctx->map, pl->x, newy) == MAP_FLOOR)
 		pl->y = newy;
 }

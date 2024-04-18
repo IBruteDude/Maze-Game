@@ -3,7 +3,6 @@
 void render_text(const char *message, int x, int y, int size)
 {
 	maze_game_context_t *ctx = game_ctx();
-	static SDL_Texture *characters[128];
 	int len = strlen(message);
 	
 	if (size == -1)

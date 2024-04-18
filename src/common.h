@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <limits.h>
 
 #ifndef PATH_MAX
 	#ifdef __linux__
@@ -75,6 +76,9 @@ do {\
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+
+#undef SDL_UNUSED
+#define SDL_UNUSED
 
 #if !SDL_VERSION_ATLEAST(2, 0, 10)
 
@@ -153,52 +157,33 @@ do { \
 	#err_src " Error: %s\n", SDL_GetError())
 
 #define VEC4_T(type, name) \
-typedef union name##4 \
+typedef struct name##4 \
 { \
-	struct \
-	{ \
-		type x, y, z, w; \
-	}; \
-	struct \
-	{ \
-		type r, g, b, a; \
-	}; \
-} name##4; \
+	type x, y, z, w; \
+} name##4 \
 
 #define VEC3_T(type, name) \
-typedef union name##3 \
+typedef struct name##3 \
 { \
-	struct \
-	{ \
-		type x, y, z; \
-	}; \
-	struct \
-	{ \
-		type r, g, b; \
-	}; \
-} name##3; \
+	type x, y, z; \
+} name##3 \
 
 #define VEC2_T(type, name) \
-typedef union name##2 \
+typedef struct name##2 \
 { \
-	struct \
-	{ \
-		type x, y; \
-	}; \
-	struct \
-	{ \
-		type r, g; \
-	}; \
-} name##2; \
+	type x, y; \
+} name##2 \
 
 #define VEC_T(type, prefix) \
-	VEC2_T(type, prefix) VEC3_T(type, prefix) VEC4_T(type, prefix)
+	VEC2_T(type, prefix); \
+	VEC3_T(type, prefix); \
+	VEC4_T(type, prefix)
 
-VEC_T(bool, bvec)
-VEC_T(int, ivec)
-VEC_T(unsigned int, uvec)
-VEC_T(float, vec)
-VEC_T(double, dvec)
+VEC_T(bool, bvec);
+VEC_T(int, ivec);
+VEC_T(unsigned int, uvec);
+VEC_T(float, vec);
+VEC_T(double, dvec);
 
 /**
  * struct player_s - a struct for storing player data

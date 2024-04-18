@@ -39,9 +39,7 @@ void draw_texture_line(double xs, double ys, double xe, double ye, double t_para
 void calculate_line_coords(double px, double py, double pview,
 	double x, double y, double wx[2], double wy[2])
 {
-	double	min_ha = -FOV_H/2, max_ha = FOV_H/2,
-			min_wa = -FOV_W/2, max_wa = FOV_W/2,
-			dy[2] = { x - px, x - px},
+	double	dy[2] = { x - px, x - px},
 			dx[2] = { y - py, y - py + 1},
 			dz = WALL_H/2, theta[2], phi[2], hypo;
 
@@ -59,7 +57,7 @@ void calculate_line_coords(double px, double py, double pview,
 
 void render_map_tile(map_t *map, player_t *pl, int i, int j)
 {
-	double w = map->w, h = map->h, x = pl->x, y = pl->y, view = pl->view;
+	double x = pl->x, y = pl->y;
 	double wx[4], wy[4], dists[2][2];
 	maze_game_context_t *ctx = game_ctx();
 
@@ -84,13 +82,20 @@ void render_map_tile(map_t *map, player_t *pl, int i, int j)
 		calculate_line_coords(x, y, pl->view, i + k / (CAP), j, wx, wy);
 		wy[0] -= WIN_H / 70;
 		wy[1] -= WIN_H / 70;
-		if (ctx->textured)
-			draw_texture_line(wx[0], wy[0], wx[1], wy[1], k / (CAP), ctx->texs->p[1], CAP),
-			draw_texture_line(wx[0], WIN_H - wy[0], wx[1], WIN_H - wy[1], k / (CAP), ctx->texs->p[2], CAP);
-		else
-			SDL_SetRenderDrawColor(ctx->rend, (i * 50 + j * 60) & 255, (i * 80 + j * 90) & 255, (i * 110 + j * 120) & 255, 255),
-			SDL_RenderDrawLineF(ctx->rend, wx[0], wy[0], wx[1], wy[1]),
-			SDL_RenderDrawLineF(ctx->rend, wx[0], WIN_H - wy[0], wx[1], WIN_H - wy[1]);
+		switch (map_get(map, i, j))
+		{
+		case MAP_FLOOR:
+			if (ctx->textured)
+				draw_texture_line(wx[0], wy[0], wx[1], wy[1], k / (CAP), ctx->texs->p[1], CAP),
+				draw_texture_line(wx[0], WIN_H - wy[0], wx[1], WIN_H - wy[1], k / (CAP), ctx->texs->p[2], CAP);
+			else
+				SDL_SetRenderDrawColor(ctx->rend, (i * 50 + j * 60) & 255, (i * 80 + j * 90) & 255, (i * 110 + j * 120) & 255, 255),
+				SDL_RenderDrawLineF(ctx->rend, wx[0], wy[0], wx[1], wy[1]),
+				SDL_RenderDrawLineF(ctx->rend, wx[0], WIN_H - wy[0], wx[1], WIN_H - wy[1]);
+			break;
+		default:
+			break;
+		}
 	}
 }
 
@@ -124,7 +129,7 @@ void raycaster_renderer(map_t *map, player_t *pl)
 
 	for (int i = 0; i < w; i++)
 		for (int j = 0; j < h; j++)
-			if (map_get(map, i, j) == FLOOR && ctx->pl_viewed[i][j])
+			if (map_get(map, i, j) == MAP_FLOOR && ctx->pl_viewed[i][j])
 				render_map_tile(map, pl, i, j), ctx->pl_viewed[i][j] = 0;
 
 	for (int i = -(WIN_W / 2); i < WIN_W / 2; i++)
@@ -145,7 +150,7 @@ void raycaster_renderer(map_t *map, player_t *pl)
 			int tex;
 			switch (map_get(map, pl->x + hd + dirx * EPSILON, pl->y + vd + diry * EPSILON))
 			{
-				case ENTERANCE: case EXIT: tex = 3;
+				case MAP_ENTERANCE: case MAP_EXIT: tex = 3;
 					break;
 				default: tex = 0;
 			}
@@ -197,10 +202,10 @@ void render_minimap(map_t *map, int x, int y, double maxw, double maxh,
 			};
 			switch (map_get(map, j, i))
 			{
-			case WALL: SDL_SetRenderDrawColor(ctx->rend, 255, 255, 255, 255); break;
-			case FLOOR: SDL_SetRenderDrawColor(ctx->rend, 100, 100, 100, 255); break;
-			case ENTERANCE: SDL_SetRenderDrawColor(ctx->rend, 100, 255, 255, 255); break;
-			case EXIT: SDL_SetRenderDrawColor(ctx->rend, 100, 255, 100, 255); break;
+			case MAP_WALL: SDL_SetRenderDrawColor(ctx->rend, 255, 255, 255, 255); break;
+			case MAP_FLOOR: SDL_SetRenderDrawColor(ctx->rend, 100, 100, 100, 255); break;
+			case MAP_ENTERANCE: SDL_SetRenderDrawColor(ctx->rend, 100, 255, 255, 255); break;
+			case MAP_EXIT: SDL_SetRenderDrawColor(ctx->rend, 100, 255, 100, 255); break;
 			}
 			SDL_RenderDrawRect(ctx->rend, &r);
 		}
@@ -227,14 +232,13 @@ void render_minimap(map_t *map, int x, int y, double maxw, double maxh,
 void raycaster_2D_preview(map_t *map, player_t *pl)
 {
 	maze_game_context_t *ctx = game_ctx();
-	double SDL_UNUSED d, hd, vd, lineh,
-		px_angle_dt = FOV_W / WIN_W, tan_fh2 = tan(FOV_H / 2) * 2;
+	double d, hd, vd, px_angle_dt = FOV_W / WIN_W;
 	bool north_or_south;
 
 	CLAMP_ANGLE(pl->view);
 	for (int ray_n = -(WIN_W / 2); ray_n < WIN_W / 2; ray_n+=8) {
 		double  x = pl->x, y = pl->y, theta = pl->view + ray_n * px_angle_dt,
-				w = map->w, h = map->h, tan_th = tan(theta), itan_th = 1 / tan_th;
+				tan_th = tan(theta), itan_th = 1 / tan_th;
 
 		olc_distance(map, pl->x, pl->y, pl->view + ray_n * px_angle_dt,
 					&d, &hd, &vd, &north_or_south);

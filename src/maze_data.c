@@ -43,7 +43,6 @@ bool maze_data_load(const char *savefile)
 
 	for (char c = 1; c > 0; c++)
 	{
-		static const SDL_Color White = { 255, 255, 255, 255 };
 		char pathbuf[PATH_MAX];
 		sprintf(pathbuf, "%s/assets/baked/fonts/%s/%d.bmp", getenv("PWD"), ctx->font, (int)c);
 		SDL_Surface *char_sur = SDL_LoadBMP(pathbuf);
