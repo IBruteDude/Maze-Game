@@ -80,7 +80,7 @@ do {\
 #undef SDL_UNUSED
 #define SDL_UNUSED
 
-#if !SDL_VERSION_ATLEAST(2, 0, 10)
+#if defined(__linux__) || !SDL_VERSION_ATLEAST(2, 0, 10)
 
 	#define SDL_RenderCopyF			SDL_RenderCopy
 	#define SDL_RenderCopyExF		SDL_RenderCopyEx
