@@ -7,8 +7,8 @@
 		"speed": 3
 	},
 	"fpsmax": 60,
-	"font": "Sans",
-	"font_size": 150,
+	"font": "Igoe",
+	"font_size": 60,
 	"textures": [
 		"assets/baked/images/walls1.bmp",
 		"assets/baked/images/floors.bmp",

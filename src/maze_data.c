@@ -1,16 +1,21 @@
 #include "maze_data.h"
 
-bool maze_data_load(const char *savefile)
+/**
+ * maze_data_load - loads all game config data from specified file
+ */
+bool maze_data_load(const char *configfile)
 {
 	maze_game_context_t *ctx = game_ctx();
 	cJSON *game_data, *player;
 	char *buf, pathbuf[PATH_MAX] = "";
 
-	sprintf(pathbuf, "%s/%s", getenv("PWD"), savefile);
+	/* Get full file path */
+	sprintf(pathbuf, "%s/%s", getenv("PWD"), configfile);
 	buf = loadfile(pathbuf), game_data = cJSON_Parse(buf), free(buf);
 	if (!game_data)
 		return (false);
 
+	/* Set all player data */
 	player = JOBJ(game_data, "player");
 	ctx->dtmin = 1 / json_num(game_data, "fpsmax"), ctx->dt = ctx->dtmin;
 	ctx->capfps = json_bool(game_data, "capfps");
@@ -19,12 +24,14 @@ bool maze_data_load(const char *savefile)
 	ctx->pl->speed = json_num(player, "speed");
 	ctx->pl->xvel = ctx->pl->yvel = 0;
 
+	/* Load the maze map */
 	map_load(ctx->map, json_str(game_data, "map"));
 
-	ctx->fz = json_num(game_data, "font_size");
-
+	/* Load the specified font and its characters */
+	ctx->fz = json_num(game_data, "font_size") * WIN_W / 1000.0;
 	strncpy(ctx->font, json_str(game_data, "font"), 100);
 
+	/* Load all the required textures */
 	int tex_num = json_arr_size(game_data, "textures");
 
 	for (int i = 0; i < tex_num; i++)
@@ -37,6 +44,7 @@ bool maze_data_load(const char *savefile)
 	}
 	cJSON_Delete(game_data);
 
+	/* Initialise the player view matrix */
 	ctx->pl_viewed = (bool **)calloc(ctx->map->w, sizeof(bool *));
 	for (int i = 0; i < ctx->map->w; i++)
 		ctx->pl_viewed[i] = (bool *)calloc(ctx->map->h, sizeof(bool));
@@ -55,6 +63,9 @@ bool maze_data_load(const char *savefile)
 	return (!!ctx->map);
 }
 
+/**
+ * maze_data_free - free the game's loaded data
+ */
 void maze_data_free()
 {
 	maze_game_context_t *ctx = game_ctx();

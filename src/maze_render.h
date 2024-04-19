@@ -28,7 +28,7 @@ void draw_texture_line(double xs, double ys, double xe, double ye, double t_para
 	else
 	{
 		SDL_Rect srcrect = { .x = t_param * w, .y = 0, .w = MAX(1.0, ceil(w/cap)), .h = h };
-		double angle = atan2(ye - ys, xe - xs) * (180.0 / M_PI);
+		double angle = atan2(ye - ys, xe - xs) * (180.0 / PI);
 		SDL_FPoint center = { .x = 0.5, .y = 0.5 };
     	SDL_FRect dstrect = { .x = xs, .y = ys, .w = sqrt((xe - xs) * (xe - xs) + (ye - ys) * (ye - ys)), .h = 1 };
     	
@@ -76,7 +76,43 @@ void render_map_tile(map_t *map, player_t *pl, int i, int j)
 
 	dists[0][0] = sqrt(MAX(dists[0][0], dists[1][0]));
 
+	SDL_Color tile_color = {
+		(i * 50 + j * 60) & 255,
+		(i * 80 + j * 90) & 255,
+		(i * 110 + j * 120) & 255,
+		255};
+	
+	if (ctx->textured)
+		tile_color.r = tile_color.g = tile_color.b = tile_color.a = 255;
+
+	TRANSFORM4(wy, -= WIN_H / 70);
+
+#ifndef NO_FLOAT_RENDERING
+	SDL_Vertex verts[4] = {
+		{ .position = { .x = wx[0], .y = wy[0]}, .color = tile_color, .tex_coord = { .x = 0.0, .y = 0.0 } },
+		{ .position = { .x = wx[1], .y = wy[1]}, .color = tile_color, .tex_coord = { .x = 0.0, .y = 1.0 } },
+		{ .position = { .x = wx[2], .y = wy[2]}, .color = tile_color, .tex_coord = { .x = 1.0, .y = 0.0 } },
+		{ .position = { .x = wx[3], .y = wy[3]}, .color = tile_color, .tex_coord = { .x = 1.0, .y = 1.0 } }
+	};
+	int indicies[6] = {
+		0, 2, 3,
+		0, 3, 1
+	};
+
+	switch (map_get(map, i, j))
+	{
+	case MAP_FLOOR:
+		SDL_RenderGeometry(ctx->rend, (ctx->textured) ? ctx->texs->p[1] : NULL, &verts[0], 4, indicies, 6);
+#define FLIP_VERTICALLY(x) (x).position.y = (WIN_H - (x).position.y)
+		APPLY4(verts, FLIP_VERTICALLY);
+		SDL_RenderGeometry(ctx->rend, (ctx->textured) ? ctx->texs->p[2] : NULL, &verts[0], 4, indicies, 6);
+		break;
+	default:
+		break;
+	}
+#else
 #define CAP (dists[0][0])
+	SDL_SetRenderDrawColor(ctx->rend, CSS_RGBA(tile_color));
 	for (int k = 0; k < CAP; k++)
 	{
 		calculate_line_coords(x, y, pl->view, i + k / (CAP), j, wx, wy);
@@ -89,7 +125,6 @@ void render_map_tile(map_t *map, player_t *pl, int i, int j)
 				draw_texture_line(wx[0], wy[0], wx[1], wy[1], k / (CAP), ctx->texs->p[1], CAP),
 				draw_texture_line(wx[0], WIN_H - wy[0], wx[1], WIN_H - wy[1], k / (CAP), ctx->texs->p[2], CAP);
 			else
-				SDL_SetRenderDrawColor(ctx->rend, (i * 50 + j * 60) & 255, (i * 80 + j * 90) & 255, (i * 110 + j * 120) & 255, 255),
 				SDL_RenderDrawLineF(ctx->rend, wx[0], wy[0], wx[1], wy[1]),
 				SDL_RenderDrawLineF(ctx->rend, wx[0], WIN_H - wy[0], wx[1], WIN_H - wy[1]);
 			break;
@@ -97,9 +132,8 @@ void render_map_tile(map_t *map, player_t *pl, int i, int j)
 			break;
 		}
 	}
+#endif
 }
-
-#define EPSILON 1e-6
 
 void raycaster_renderer(map_t *map, player_t *pl)
 {
@@ -171,11 +205,15 @@ void raycaster_renderer(map_t *map, player_t *pl)
 		}
 	}
 
+	if (ctx->fpsdisplay)
 	{
 		char fpsbuf[100];
 		snprintf(fpsbuf, 100, "fps: %.2f", 1 / ctx->dt);
 		render_text(fpsbuf, 0, 0, ctx->fz);
 	}
+
+	if (ctx->helpmsg)
+		help_message();
 
 	SDL_SetRenderDrawColor(ctx->rend, 0, 0, 0, 255);
 }
@@ -202,10 +240,15 @@ void render_minimap(map_t *map, int x, int y, double maxw, double maxh,
 			};
 			switch (map_get(map, j, i))
 			{
-			case MAP_WALL: SDL_SetRenderDrawColor(ctx->rend, 255, 255, 255, 255); break;
-			case MAP_FLOOR: SDL_SetRenderDrawColor(ctx->rend, 100, 100, 100, 255); break;
-			case MAP_ENTERANCE: SDL_SetRenderDrawColor(ctx->rend, 100, 255, 255, 255); break;
-			case MAP_EXIT: SDL_SetRenderDrawColor(ctx->rend, 100, 255, 100, 255); break;
+			case MAP_EXIT: case MAP_WALL:
+				SDL_SetRenderDrawColor(ctx->rend, 255, 255, 255, 255);
+				break;
+			case MAP_FLOOR:
+				SDL_SetRenderDrawColor(ctx->rend, 100, 100, 100, 255);
+				break;
+			case MAP_ENTERANCE:
+				SDL_SetRenderDrawColor(ctx->rend, 100, 255, 255, 255);
+				break;
 			}
 			SDL_RenderDrawRect(ctx->rend, &r);
 		}
@@ -255,6 +298,7 @@ void raycaster_2D_preview(map_t *map, player_t *pl)
 		}
 	}
 
+	if (ctx->fpsdisplay)
 	{
 		char fpsbuf[100];
 		snprintf(fpsbuf, 100, "fps: %.2f", 1 / ctx->dt);
@@ -264,10 +308,12 @@ void raycaster_2D_preview(map_t *map, player_t *pl)
 		char fpsbuf[100];
 #define DISPLAY(buf, x) \
 		snprintf(buf, 100, #x ": %.2f", (double)x); \
-		render_text(buf, (WIN_W - MAPSIZE)/2 + MAPSIZE, __COUNTER__ * ctx->fz, ctx->fz);
+		render_text(buf, ((WIN_W - MAPSIZE)/2 + MAPSIZE)/(double)WIN_W, __COUNTER__ * ctx->fz / (double)WIN_H, ctx->fz/1.5);
 
-		DISPLAY(fpsbuf, pl->view * 180/PI);
-		DISPLAY(fpsbuf, ctx->hoff);
+		double x = pl->x, y = pl->y, view_angle = pl->view * 180/PI;
+		DISPLAY(fpsbuf, x);
+		DISPLAY(fpsbuf, y);
+		DISPLAY(fpsbuf, view_angle);
 	}
 	SDL_SetRenderDrawColor(ctx->rend, 0, 0, 0, 255);
 }

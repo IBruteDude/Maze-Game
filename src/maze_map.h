@@ -6,6 +6,7 @@
 typedef struct map_s
 {
 	int w, h;
+	int start_x, start_y;
 	byte_vec data;
 } map_t;
 

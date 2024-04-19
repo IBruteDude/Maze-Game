@@ -12,11 +12,15 @@ int font_ptsize = -1;
 void open_fonts(char *argv[], int start, int end)
 {
 	if (outdir == NULL)
-		perror("no output directory\n"),  exit(EXIT_FAILURE);
-	if (start == -1 || end == -1)
-		perror("no fonts provided\n"), exit(EXIT_FAILURE);
+	{
+		perror("no output directory\n");
+		return;
+	}
 	if (font_ptsize <= 0)
-		perror("font point size is invalid\n"), exit(EXIT_FAILURE);
+	{
+		perror("font point size is invalid\n");
+		return;
+	}
 	for (int i = start; i < end; i++)
 	{
 		TTF_Font *font = TTF_OpenFont(argv[i], font_ptsize);
@@ -36,9 +40,9 @@ void open_fonts(char *argv[], int start, int end)
 		for (char c = 1; c > 0; c++)
 		{
 			char character[2] = {c, '\0'};
-			static const SDL_Color WHITE = { 255, 255, 255, 255 };
+			static const SDL_Color WHITE = {255, 255, 255, 255};
 
-			SDL_Surface* character_surface =
+			SDL_Surface *character_surface =
 				TTF_RenderText_Solid(font, character, WHITE);
 
 			sprintf(filename, "%s/fonts/%s/%d.bmp", outdir, fontname, (int)c);
@@ -58,8 +62,6 @@ void open_textures(char *argv[], int start, int end)
 {
 	if (outdir == NULL)
 		perror("no output directory\n"), exit(EXIT_FAILURE);
-	if (start == -1 || end == -1)
-		perror("no textures provided\n"), exit(EXIT_FAILURE);
 	for (int i = start; i < end; i++)
 	{
 		SDL_Surface *tex = IMG_Load(argv[i]);
@@ -91,8 +93,10 @@ int main(int argc, char *argv[])
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 		perror("SDL_Init"), exit(EXIT_FAILURE);
+	atexit(SDL_Quit);
 	if (TTF_Init() != 0)
 		perror("TTF_Init"), exit(EXIT_FAILURE);
+	atexit(TTF_Quit);
 
 	int texs_start = -1, texs_end = -1, fonts_start = -1, fonts_end = -1;
 
@@ -127,11 +131,10 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "unrecognised option: %s\n", argv[i]);
 	}
 
+	if (texs_start != -1 && texs_end != -1)
+		open_textures(argv, texs_start, texs_end);
+	if (fonts_start != -1 && fonts_end != -1)
+		open_fonts(argv, fonts_start, fonts_end);
 
-	open_textures(argv, texs_start, texs_end);
-	open_fonts(argv, fonts_start, fonts_end);
-	
-	TTF_Quit();
-	SDL_Quit();
 	return EXIT_SUCCESS;
 }

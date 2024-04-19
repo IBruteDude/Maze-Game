@@ -24,51 +24,55 @@ typedef unsigned int uint;
 typedef unsigned long ulong;
 
 #define PI 3.1415926535897932
-#define CLAMP_ANGLE(theta) \
-do {\
-	if (theta < -PI) \
-		theta = (-(fmod(-theta + PI, 2 * PI) - PI)); \
-	else if (theta > PI)  \
-		theta = fmod(theta + PI, 2 * PI) - PI; \
-} while (0) \
+#define EPSILON 1e-6
+
+#define CLAMP_ANGLE(theta)                               \
+	do                                                   \
+	{                                                    \
+		if (theta < -PI)                                 \
+			theta = (-(fmod(-theta + PI, 2 * PI) - PI)); \
+		else if (theta > PI)                             \
+			theta = fmod(theta + PI, 2 * PI) - PI;       \
+	} while (0)
 
 #if !defined(MIN) && !defined(MAX) && !defined(ABS)
-	#define MIN(x, y) ((((x) < (y)) ? (x) : (y)))
-	#define MAX(x, y) ((((x) > (y)) ? (x) : (y)))
-	#define ABS(x) ((((x) < 0) ? -(x) : (x)))
+#define MIN(x, y) ((((x) < (y)) ? (x) : (y)))
+#define MAX(x, y) ((((x) > (y)) ? (x) : (y)))
+#define ABS(x) ((((x) < 0) ? -(x) : (x)))
 #endif
 
 #ifdef DEBUG
-	#define ASSERT(condition, x) \
-		(assert(condition), x)
+#define ASSERT(condition, x) \
+	(assert(condition), x)
 
-	#define DEBUGI(x) \
-	(printf("L%d: " #x " = %ld\n", __LINE__, (long)x), fflush(stdout), x)
-	#define DEBUG2I(x, y) \
-	(printf("L%d: " #x " = %ld, " #y " = %ld\n", __LINE__, (long)x, (long)y), fflush(stdout), x), y
+#define DEBUGI(x) \
+	(printf("L%d: " #x " = %lld\n", __LINE__, (long long)x), fflush(stdout), x)
+#define DEBUG2I(x, y) \
+	(printf("L%d: " #x " = %lld, " #y " = %lld\n", __LINE__, (long long)x, (long long)y), fflush(stdout), x), y
 
-	#define DEBUGF(x) \
+#define DEBUGF(x) \
 	(printf("L%d: " #x " = %f\n", __LINE__, (double)x), fflush(stdout), x)
-	#define DEBUG2F(x, y) \
+#define DEBUG2F(x, y) \
 	(printf("L%d: " #x " = %f, " #y " = %f\n", __LINE__, (double)x, (double)y), fflush(stdout), x), y
 
-	#define DEBUGMAP(map, ix, iy, s) \
-	do { \
-		for (int i = 0; i < h; i++) \
-		{ \
-			for (int j = 0; j < w; j++) \
-				printf((i == floor(ix) && j == floor(iy)) ? s "%d" s : " %d ",\
-					map[i * w + j]); \
-			putchar('\n'); \
-		} \
-		fflush(stdout); \
+#define DEBUGMAP(map, ix, iy, s)                                               \
+	do                                                                         \
+	{                                                                          \
+		for (int i = 0; i < h; i++)                                            \
+		{                                                                      \
+			for (int j = 0; j < w; j++)                                        \
+				printf((i == floor(ix) && j == floor(iy)) ? s "%d" s : " %d ", \
+					   map[i * w + j]);                                        \
+			putchar('\n');                                                     \
+		}                                                                      \
+		fflush(stdout);                                                        \
 	} while (0)
 #else
-	#define DEBUGI(x)		x
-	#define DEBUG2I(x, y)	x, y
-	#define DEBUGF(x)		x
-	#define DEBUG2F(x, y)	x, y
-	#define DEBUGMAP(map, ix, iy, s)
+#define DEBUGI(x) x
+#define DEBUG2I(x, y) x, y
+#define DEBUGF(x) x
+#define DEBUG2F(x, y) x, y
+#define DEBUGMAP(map, ix, iy, s)
 #endif
 
 #define SIGN(x) ((x != 0) * (x >= 0 ? 1 : -1))
@@ -77,29 +81,25 @@ do {\
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
-#undef SDL_UNUSED
-#define SDL_UNUSED
+#if (defined(__linux__) && !SDL_VERSION_ATLEAST(2, 30, 2)) || !SDL_VERSION_ATLEAST(2, 0, 10)
 
-#if defined(__linux__) || !SDL_VERSION_ATLEAST(2, 0, 10)
+	#define NO_FLOAT_RENDERING
 
-	#define SDL_RenderCopyF			SDL_RenderCopy
-	#define SDL_RenderCopyExF		SDL_RenderCopyEx
-	#define SDL_RenderDrawLineF		SDL_RenderDrawLine
-	#define SDL_RenderDrawLinesF	SDL_RenderDrawLines
-	#define SDL_RenderDrawPointF	SDL_RenderDrawPoint
-	#define SDL_RenderDrawPointsF	SDL_RenderDrawPoints
-	#define SDL_RenderDrawRectF		SDL_RenderDrawRect
-	#define SDL_RenderDrawRectsF	SDL_RenderDrawRects
-	#define SDL_RenderFillRectF		SDL_RenderFillRect
-	#define SDL_RenderFillRectsF	SDL_RenderFillRects
+	#define SDL_RenderCopyF SDL_RenderCopy
+	#define SDL_RenderCopyExF SDL_RenderCopyEx
+	#define SDL_RenderDrawLineF SDL_RenderDrawLine
+	#define SDL_RenderDrawLinesF SDL_RenderDrawLines
+	#define SDL_RenderDrawPointF SDL_RenderDrawPoint
+	#define SDL_RenderDrawPointsF SDL_RenderDrawPoints
+	#define SDL_RenderDrawRectF SDL_RenderDrawRect
+	#define SDL_RenderDrawRectsF SDL_RenderDrawRects
+	#define SDL_RenderFillRectF SDL_RenderFillRect
+	#define SDL_RenderFillRectsF SDL_RenderFillRects
 
-	#define SDL_FRect				SDL_Rect
-	#define SDL_FPoint				SDL_Point
+	#define SDL_FRect SDL_Rect
+	#define SDL_FPoint SDL_Point
 
 #endif
-
-#define WIN_W 1024
-#define WIN_H 768
 
 #include <DG_dynarr.h>
 
@@ -112,15 +112,14 @@ DA_TYPEDEF(byte, byte_vec)
 #define JBOOL(obj) cJSON_IsTrue(obj)
 #define JNUM(obj) cJSON_GetNumberValue(obj)
 #define JSTR(obj) cJSON_GetStringValue(obj)
-#define JARR_GET(obj, idx)	cJSON_GetArrayItem(obj, idx)
-#define JARR_SIZE(obj)	cJSON_GetArraySize(obj)
+#define JARR_GET(obj, idx) cJSON_GetArrayItem(obj, idx)
+#define JARR_SIZE(obj) cJSON_GetArraySize(obj)
 
 #define json_bool(obj, field) JBOOL(JOBJ(obj, field))
 #define json_num(obj, field) JNUM(JOBJ(obj, field))
 #define json_str(obj, field) JSTR(JOBJ(obj, field))
-#define json_arr_get(obj, field, idx)	JARR_GET(JOBJ(obj, field), idx)
-#define json_arr_size(obj, field)	JARR_SIZE(JOBJ(obj, field))
-
+#define json_arr_get(obj, field, idx) JARR_GET(JOBJ(obj, field), idx)
+#define json_arr_size(obj, field) JARR_SIZE(JOBJ(obj, field))
 
 #define ALL2(xs, pred) ((pred((xs)[0])) && (pred((xs)[1])))
 #define ALL3(xs, pred) ((pred((xs)[0])) && (pred((xs)[1])) && (pred((xs)[2])))
@@ -134,49 +133,59 @@ DA_TYPEDEF(byte, byte_vec)
 #define SOME3(xs, pred) ((pred((xs)[0])) || (pred((xs)[1])) || (pred((xs)[2])))
 #define SOME4(xs, pred) ((pred((xs)[0])) || (pred((xs)[1])) || (pred((xs)[2])) || (pred((xs)[3])))
 
+#define TRANSFORM2(xs, assign) ((xs)[0]assign, (xs)[1]assign)
+#define TRANSFORM3(xs, assign) ((xs)[0]assign, (xs)[1]assign, (xs)[2]assign)
+#define TRANSFORM4(xs, assign) ((xs)[0]assign, (xs)[1]assign, (xs)[2]assign, (xs)[3]assign)
+
 #define APPLY2(xs, func) \
-do { \
-	(func((xs)[0])); \
-	(func((xs)[1])); \
-} while (0)
+	do                   \
+	{                    \
+		(func((xs)[0])); \
+		(func((xs)[1])); \
+	} while (0)
 #define APPLY3(xs, func) \
-do { \
-	(func((xs)[0])); \
-	(func((xs)[1])); \
-	(func((xs)[2])); \
-} while (0)
+	do                   \
+	{                    \
+		(func((xs)[0])); \
+		(func((xs)[1])); \
+		(func((xs)[2])); \
+	} while (0)
 #define APPLY4(xs, func) \
-do { \
-	(func((xs)[0])); \
-	(func((xs)[1])); \
-	(func((xs)[2])); \
-	(func((xs)[3])); \
-} while (0)
+	do                   \
+	{                    \
+		(func((xs)[0])); \
+		(func((xs)[1])); \
+		(func((xs)[2])); \
+		(func((xs)[3])); \
+	} while (0)
 
 #define maze_loge(err_src) fprintf(stderr, \
-	#err_src " Error: %s\n", SDL_GetError())
+								   #err_src " Error: %s\n", SDL_GetError())
 
 #define VEC4_T(type, name) \
-typedef struct name##4 \
-{ \
-	type x, y, z, w; \
-} name##4 \
+	typedef struct name##4 \
+	{                      \
+		type x, y, z, w;   \
+	}                      \
+	name##4
 
 #define VEC3_T(type, name) \
-typedef struct name##3 \
-{ \
-	type x, y, z; \
-} name##3 \
+	typedef struct name##3 \
+	{                      \
+		type x, y, z;      \
+	}                      \
+	name##3
 
 #define VEC2_T(type, name) \
-typedef struct name##2 \
-{ \
-	type x, y; \
-} name##2 \
+	typedef struct name##2 \
+	{                      \
+		type x, y;         \
+	}                      \
+	name##2
 
 #define VEC_T(type, prefix) \
-	VEC2_T(type, prefix); \
-	VEC3_T(type, prefix); \
+	VEC2_T(type, prefix);   \
+	VEC3_T(type, prefix);   \
 	VEC4_T(type, prefix)
 
 VEC_T(bool, bvec);

@@ -30,6 +30,23 @@ bool map_load(map_t *map, const char *mapfile)
 		}
 	}
 	map->h = len / map->w--;
+
+	map->start_x = map->start_y = -1;
+	for (int i = 0; i < map->w; i++)
+		for (int j = 0; j < map->h; j++)
+			if (map_get(map, i, j) == MAP_ENTERANCE && (
+					((i < map->w - 1) && map_get(map, i + 1, j)) ||
+					((j < map->h - 1) && map_get(map, i, j + 1))
+				))
+				map->start_x = i, map->start_y = j;
+	
+	if (map->start_x == -1)
+	{
+		fprintf(stderr, "error loading map from file: %s\n"
+						"map has no valid enterance: \"%c\"\n", mapfile, MAP_ENTERANCE);
+		goto cleanup;
+	}
+
 	fclose(f);
 	return (true);
 cleanup:

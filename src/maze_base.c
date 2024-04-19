@@ -1,6 +1,10 @@
 #include "maze_base.h"
+#include "maze_data.h"
 
-maze_game_context_t *game_ctx(void) {
+/**
+ */
+maze_game_context_t *game_ctx(void)
+{
 	static map_t map;
 	static player_t pl;
 	static maze_resource_stack_t resource_stack;
@@ -12,11 +16,13 @@ maze_game_context_t *game_ctx(void) {
 		.resource_stack = &resource_stack,
 		.texs = &texture_pack,
 		.tlast = &last_frame_time,
-		.state = MAZE_3D,
+		.state = MAZE_MAINSCREEN,
 		.hoff = 0,
 		.voff = 0,
 		.textured = true,
 		.focused = true,
+		.helpmsg = true,
+		.fpsdisplay = true,
 	};
 
 	return &global_game_context;
@@ -25,8 +31,8 @@ maze_game_context_t *game_ctx(void) {
 void CTOR maze_init(void)
 {
 	maze_game_context_t *ctx = game_ctx();
-
 	char pathbuf[PATH_MAX];
+	
 	sprintf(pathbuf, "%s/%s", getenv("PWD"), "logs/output.log");
 	freopen(pathbuf, "w", stdout);
 	sprintf(pathbuf, "%s/%s", getenv("PWD"), "logs/error.log");
@@ -37,13 +43,13 @@ void CTOR maze_init(void)
 
 
 	ctx->win = SDL_CreateWindow("Maze Game",
-		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		WIN_W, WIN_H, SDL_WINDOW_SHOWN);
+								SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+								WIN_W, WIN_H, SDL_WINDOW_SHOWN);
 	if (ctx->win == NULL)
 		maze_loge("SDL_CreateWindow"), exit(EXIT_FAILURE);
 
 	ctx->rend = SDL_CreateRenderer(ctx->win, -1,
-		SDL_RENDERER_ACCELERATED);
+								   SDL_RENDERER_ACCELERATED);
 	if (ctx->rend == NULL)
 		maze_loge("SDL_CreateRenderer"), exit(EXIT_FAILURE);
 
@@ -56,6 +62,7 @@ void DTOR maze_cleanup(void)
 {
 	maze_game_context_t *ctx = game_ctx();
 
+	maze_data_free();
 	while (!da_empty(*ctx->resource_stack)) {
 		maze_resource_t r = da_pop(*ctx->resource_stack);
 

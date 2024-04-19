@@ -4,9 +4,8 @@
 #include "common.h"
 #include "maze_map.h"
 
-#include <pthread.h>
-
-#include "DG_dynarr.h"
+#define WIN_W 1600
+#define WIN_H 900
 
 #ifndef NO_CDTORS
 	#define CTOR __attribute__((constructor))
@@ -29,6 +28,8 @@ typedef enum maze_game_state_e
 {
 	MAZE_MINIMAP,
 	MAZE_3D,
+	MAZE_MAINSCREEN,
+	MAZE_WINSCREEN,
 } maze_game_state_t;
 
 typedef struct maze_game_context_s
@@ -41,18 +42,21 @@ typedef struct maze_game_context_s
 	int fz;
 
 	maze_game_state_t state;
+	struct timespec rtstart;
+	struct timespec rtend;
 	player_t *pl;
 	map_t *map;
 	maze_resource_stack_t *resource_stack;
-
 	bool **pl_viewed;
-	bool focused;
 
 	struct timespec *tlast;
 	double dtmin;
 	double dt;
-	bool capfps;
-	bool textured;
+	bool capfps : 1;
+	bool textured : 1;
+	bool focused : 1;
+	bool helpmsg : 1;
+	bool fpsdisplay : 1;
 
 	int hoff, voff;
 } maze_game_context_t;

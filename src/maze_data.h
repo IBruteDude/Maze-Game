@@ -6,4 +6,6 @@
 
 bool maze_data_load(const char *savefile);
 
+void maze_data_free();
+
 #endif

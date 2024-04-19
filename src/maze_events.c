@@ -3,6 +3,28 @@
 
 #define SENSITIVITY 0.5
 
+
+void handle_screen_change(maze_game_context_t *ctx, SDL_Event *event)
+{
+	player_t *pl = ctx->pl;
+
+	if (event->type != SDL_KEYDOWN)
+		return ;
+	if (ctx->state == MAZE_MAINSCREEN)
+		ctx->state = MAZE_3D, timespec_get(&ctx->rtstart, TIME_UTC), printf("called start\n");
+	else if (ctx->state == MAZE_WINSCREEN)
+	{
+		int sx = ctx->map->start_x, sy = ctx->map->start_y;
+
+		if (map_get(ctx->map, sx + 1, sy) == MAP_FLOOR)
+			sx++;
+		else if (map_get(ctx->map, sx, sy + 1) == MAP_FLOOR)
+			sy++;
+		ctx->state = MAZE_MAINSCREEN, ctx->helpmsg = true,
+		pl->x = sx + 0.5, pl->y = sy + 0.5;
+	}
+}
+
 void handle_key(maze_game_context_t *ctx, SDL_Event *event)
 {
 	player_t *pl = ctx->pl;
@@ -25,11 +47,23 @@ void handle_key(maze_game_context_t *ctx, SDL_Event *event)
 			break;
 		case SDLK_m:
 			if (event->type == SDL_KEYDOWN)
-				ctx->state = (ctx->state == MAZE_MINIMAP) ? MAZE_3D : MAZE_MINIMAP;
+			{
+				if (ctx->state == MAZE_3D)
+					ctx->state = MAZE_MINIMAP;
+				else if (ctx->state == MAZE_MINIMAP)
+					ctx->state = MAZE_3D;
+			}
 			break;
 		case SDLK_t:
 			if (event->type == SDL_KEYDOWN)
 				ctx->textured = !ctx->textured;
+			break;
+		case SDLK_f:
+			if (event->type == SDL_KEYDOWN && ctx->state == MAZE_3D)
+				ctx->fpsdisplay = !ctx->fpsdisplay;
+			break;
+		case SDLK_RETURN:
+			handle_screen_change(ctx, event);
 			break;
 		case SDLK_v:
 			ctx->voff++;
@@ -38,6 +72,8 @@ void handle_key(maze_game_context_t *ctx, SDL_Event *event)
 			ctx->voff--;
 			break;
 		case SDLK_h:
+			if (event->type == SDL_KEYDOWN)
+				ctx->helpmsg = !ctx->helpmsg;
 			ctx->hoff++;
 			break;
 		case SDLK_j:
@@ -45,6 +81,7 @@ void handle_key(maze_game_context_t *ctx, SDL_Event *event)
 			break;
 	}
 }
+	
 void handle_mouse(maze_game_context_t *ctx, SDL_Event *event)
 {
 	switch (event->type)
@@ -111,6 +148,8 @@ void handle_player_movement(void)
 	player_t *pl = ctx->pl;
 	double newx, newy, dx, dy, dxx, dxy, dyx, dyy;
 
+	if (ctx->state == MAZE_MAINSCREEN || ctx->state == MAZE_WINSCREEN)
+		return;
 	dxx = pl->xvel * cos(pl->view + PI/2);
 	dxy = pl->xvel * sin(pl->view + PI/2);
 	dyx = pl->yvel * cos(pl->view);
@@ -119,10 +158,30 @@ void handle_player_movement(void)
 	newy = pl->y + (dy = ctx->dt * pl->speed * (dxy + dyy));
 
 
-	if (0 < newx && newx < ctx->map->w &&
-		map_get(ctx->map, newx, pl->y) == MAP_FLOOR)
-		pl->x = newx;
-	if (0 < newy && newy < ctx->map->h &&
-		map_get(ctx->map, pl->x, newy) == MAP_FLOOR)
-		pl->y = newy;
+	if (0 < newx && newx < ctx->map->w)
+		switch (map_get(ctx->map, newx, pl->y))
+		{
+		case MAP_EXIT:
+			ctx->state = MAZE_WINSCREEN;
+			timespec_get(&ctx->rtend, TIME_UTC);
+			break;	
+		case MAP_FLOOR:
+			pl->x = newx;
+			break;
+		default:
+			break;
+		}
+	if (0 < newy && newy < ctx->map->h)
+		switch (map_get(ctx->map, pl->x, newy))
+		{
+		case MAP_EXIT:
+			ctx->state = MAZE_WINSCREEN;
+			timespec_get(&ctx->rtend, TIME_UTC);
+			break;	
+		case MAP_FLOOR:
+			pl->y = newy;
+			break;
+		default:
+			break;
+		}
 }
